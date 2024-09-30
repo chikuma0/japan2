@@ -7,37 +7,27 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write  # This line gives the workflow permission to push to the repository
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Node.js
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-    
+
     - name: Install dependencies
-      run: |
-        npm install dotenv
-        npm install
-    
-    - name: Copy files
-      run: |
-        rm -rf dist
-        mkdir dist
-        cp index.html dist/
-        cp -R css dist/ || true
-        cp -R js dist/ || true
-        # Add any other files or directories you need to copy
-    
+      run: npm install dotenv
+
     - name: Build
-      run: |
-        npm install dotenv
-        node build.js
+      run: node build.js
       env:
         GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
-    
+
+    - name: Check built index.html
+      run: |
+        echo "Checking dist/index.html content:"
+        cat dist/index.html | grep -o 'key=[^&]*'
+
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@v4
       with:
