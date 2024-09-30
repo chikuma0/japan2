@@ -4,6 +4,9 @@ const path = require('path');
 
 console.log('Build script started');
 
+console.log('Environment variables:', process.env);
+console.log('API Key (first 5 chars):', process.env.GOOGLE_MAPS_API_KEY ? process.env.GOOGLE_MAPS_API_KEY.substr(0, 5) : 'Not set');
+
 const distDir = path.join(__dirname, 'dist');
 if (!fs.existsSync(distDir)){
     fs.mkdirSync(distDir);

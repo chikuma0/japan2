@@ -19,7 +19,9 @@ jobs:
       run: npm install dotenv
 
     - name: Build
-      run: node build.js
+      run: |
+        npm install dotenv
+        node build.js
       env:
         GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
 
@@ -33,3 +35,4 @@ jobs:
       with:
         branch: gh-pages
         folder: dist
+        token: ${{ secrets.DEPLOY_TOKEN }}
