@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japan-tsū</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #0a0a0a;
+            color: #33ff33;
+            text-align: center;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #33ff33;
+            text-shadow: 2px 2px 0px #006400;
+            margin-bottom: 20px;
+        }
+
+        #game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #1a1a1a;
+            border: 4px solid #33ff33;
+            padding: 20px;
+            box-shadow: 0 0 0 4px #006400, 0 0 10px rgba(51, 255, 51, 0.5);
+        }
+
+        #panorama, #map {
+            height: 400px;
+            width: 100%;
+            margin-bottom: 20px;
+            border: 2px solid #33ff33;
+        }
+
+        #timer {
+            font-size: 24px;
+            color: #33ff33;
+            margin-bottom: 10px;
+        }
+
+        button {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #006400;
+            color: #33ff33;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            image-rendering: pixelated;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #008000;
+        }
+
+        #score, #round {
+            background-color: #0a0a0a;
+            color: #33ff33;
+            border: 2px solid #006400;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .pulse {
+            animation: pulse 0.5s ease-in-out 3;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .result-card {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            image-rendering: pixelated;
+            background-size: 100% 100%;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        .card-master { background-image: url('images/master-card.png'); }
+        .card-expert { background-image: url('images/expert-card.png'); }
+        .card-intermediate { background-image: url('images/intermediate-card.png'); }
+        .card-beginner { background-image: url('images/beginner-card.png'); }
+        .card-novice { background-image: url('images/novice-card.png'); }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Japan-tsū</h1>
+        <div id="timer">2:00</div>
+        <div id="panorama"></div>
+        <div id="map"></div>
+        <button onclick="submitGuess()">Submit Guess</button>
+        <div id="score">Total Score: 0</div>
+        <div id="round">Round: 1 / 5</div>
+    </div>
+
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=undefined&callback=initMap">
+    </script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script>
+        let panorama;
+        let map;
+        let actualLocation;
+        let guessMarker;
+        let actualMarker;
+        let animationPath;
+        let totalScore = 0;
+        let currentRound = 1;
+        const maxRounds = 5;
+        let timerInterval;
+
+        // Expand this list with more diverse locations across Japan
+        const japaneseLocations = [
+            { lat: 43.0618, lng: 141.3545, name: "Sapporo, Hokkaido" },
+            { lat: 40.8246, lng: 140.7401, name: "Aomori, Aomori" },
+            { lat: 39.7036, lng: 139.1527, name: "Morioka, Iwate" },
+            { lat: 38.2688, lng: 140.8721, name: "Sendai, Miyagi" },
+            { lat: 39.7186, lng: 139.6424, name: "Akita, Akita" },
+            { lat: 38.2405, lng: 136.3630, name: "Yamagata, Yamagata" },
+            { lat: 37.7503, lng: 140.4675, name: "Fukushima, Fukushima" },
+            { lat: 36.3416, lng: 140.4467, name: "Mito, Ibaraki" },
+            { lat: 36.5662, lng: 139.8835, name: "Utsunomiya, Tochigi" },
+            { lat: 36.3911, lng: 139.0608, name: "Maebashi, Gunma" },
+            { lat: 35.8569, lng: 139.6489, name: "Saitama, Saitama" },
+            { lat: 35.6047, lng: 139.6917, name: "Shinjuku, Tokyo" },
+            { lat: 35.4478, lng: 139.6425, name: "Yokohama, Kanagawa" },
+            { lat: 37.9022, lng: 139.0236, name: "Niigata, Niigata" },
+            { lat: 36.6953, lng: 137.2113, name: "Toyama, Toyama" },
+            { lat: 36.5946, lng: 136.6256, name: "Kanazawa, Ishikawa" },
+            { lat: 36.0652, lng: 136.2195, name: "Fukui, Fukui" },
+            { lat: 35.6635, lng: 138.5684, name: "Kofu, Yamanashi" },
+            { lat: 36.6513, lng: 138.1811, name: "Nagano, Nagano" },
+            { lat: 35.3913, lng: 136.7222, name: "Gifu, Gifu" },
+            { lat: 34.9769, lng: 138.3831, name: "Shizuoka, Shizuoka" },
+            { lat: 35.1815, lng: 136.9066, name: "Nagoya, Aichi" },
+            { lat: 34.7302, lng: 136.5086, name: "Tsu, Mie" },
+            { lat: 35.0045, lng: 135.8686, name: "Otsu, Shiga" },
+            { lat: 35.0116, lng: 135.7681, name: "Kyoto, Kyoto" },
+            { lat: 34.6937, lng: 135.5023, name: "Osaka, Osaka" },
+            { lat: 34.6913, lng: 135.1830, name: "Kobe, Hyogo" },
+            { lat: 34.6851, lng: 135.8048, name: "Nara, Nara" },
+            { lat: 34.2260, lng: 135.1675, name: "Wakayama, Wakayama" },
+            { lat: 35.5039, lng: 134.2383, name: "Tottori, Tottori" },
+            { lat: 35.4723, lng: 133.0504, name: "Matsue, Shimane" },
+            { lat: 34.6618, lng: 133.9344, name: "Okayama, Okayama" },
+            { lat: 34.3853, lng: 132.4553, name: "Hiroshima, Hiroshima" },
+            { lat: 34.1859, lng: 131.4706, name: "Yamaguchi, Yamaguchi" },
+            { lat: 34.0660, lng: 134.5591, name: "Tokushima, Tokushima" },
+            { lat: 34.3401, lng: 134.0434, name: "Takamatsu, Kagawa" },
+            { lat: 33.8416, lng: 132.7678, name: "Matsuyama, Ehime" },
+            { lat: 33.5597, lng: 133.5311, name: "Kochi, Kochi" },
+            { lat: 33.6064, lng: 130.4183, name: "Fukuoka, Fukuoka" },
+            { lat: 33.2494, lng: 130.2988, name: "Saga, Saga" },
+            { lat: 32.7448, lng: 129.8737, name: "Nagasaki, Nagasaki" },
+            { lat: 32.8032, lng: 130.7079, name: "Kumamoto, Kumamoto" },
+            { lat: 33.2382, lng: 131.6125, name: "Oita, Oita" },
+            { lat: 31.9111, lng: 131.4239, name: "Miyazaki, Miyazaki" },
+            { lat: 31.5602, lng: 130.5581, name: "Kagoshima, Kagoshima" },
+            { lat: 26.2124, lng: 127.6809, name: "Naha, Okinawa" }
+        ];
+
+        let usedLocations = [];
+
+        function initGame() {
+            panorama = new google.maps.StreetViewPanorama(
+                document.getElementById("panorama"),
+                {
+                    pov: { heading: 0, pitch: 0 },
+                    zoom: 1,
+                    addressControl: false,
+                    showRoadLabels: false
+                }
+            );
+
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 37.5, lng: 137 },
+                zoom: 5,
+                gestureHandling: 'greedy' // This allows zooming without the Control key
+            });
+
+            map.addListener("click", (e) => {
+                placeGuessMarker(e.latLng);
+            });
+
+            setupNewRound();
+        }
+
+        function setupNewRound() {
+            clearMap();
+            setRandomLocation();
+            startTimer();
+            document.getElementById("round").textContent = `Round: ${currentRound} / ${maxRounds}`;
+        }
+
+        function clearMap() {
+            if (guessMarker) guessMarker.setMap(null);
+            if (actualMarker) actualMarker.setMap(null);
+            if (animationPath) animationPath.setMap(null);
+            map.setZoom(5);
+            map.setCenter({ lat: 37.5, lng: 137 });
+        }
+
+        function updateUI() {
+            document.getElementById("score").textContent = `Total Score: ${totalScore}`;
+            document.getElementById("round").textContent = `Round: ${currentRound} / ${maxRounds}`;
+            document.getElementById("result").textContent = "";
+            document.getElementById("panorama").style.display = "block";
+            document.getElementById("map").style.display = "block";
+        }
+
+        function setRandomLocation() {
+            if (usedLocations.length === japaneseLocations.length) {
+                usedLocations = []; // Reset if all locations have been used
+            }
+
+            let availableLocations = japaneseLocations.filter(loc => !usedLocations.includes(loc));
+            actualLocation = availableLocations[Math.floor(Math.random() * availableLocations.length)];
+            usedLocations.push(actualLocation);
+
+            // Use Street View Service to check for imagery
+            const streetViewService = new google.maps.StreetViewService();
+            streetViewService.getPanorama({ location: actualLocation, radius: 50 }, (data, status) => {
+                if (status === 'OK') {
+                    panorama.setPosition(actualLocation);
+                } else {
+                    // If no street view found, try another location
+                    setRandomLocation();
+                }
+            });
+        }
+
+        function placeGuessMarker(latLng) {
+            if (guessMarker) {
+                guessMarker.setMap(null);
+            }
+            guessMarker = new google.maps.Marker({
+                position: latLng,
+                map: map,
+                icon: createPixelIcon('blue')
+            });
+        }
+
+        function createPixelIcon(color) {
+            return {
+                url: `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Crect width='8' height='8' fill='${color}' /%3E%3C/svg%3E`,
+                scaledSize: new google.maps.Size(16, 16),
+                anchor: new google.maps.Point(8, 8)
+            };
+        }
+
+        function submitGuess(isTimeUp = false) {
+            clearInterval(timerInterval);
+            
+            if (isTimeUp || !guessMarker) {
+                console.log("Time's up or no guess made. Making a random guess.");
+                const randomLat = Math.random() * (45.7 - 24.2) + 24.2;
+                const randomLng = Math.random() * (153.9 - 122.9) + 122.9;
+                placeGuessMarker(new google.maps.LatLng(randomLat, randomLng));
+            }
+
+            const guessLocation = guessMarker.getPosition();
+            const actualLatLng = new google.maps.LatLng(actualLocation.lat, actualLocation.lng);
+            const distance = google.maps.geometry.spherical.computeDistanceBetween(guessLocation, actualLatLng);
+            const distanceKm = (distance / 1000).toFixed(2);
+            const points = calculatePoints(distance);
+            totalScore += points;
+            
+            showActualLocation(actualLatLng);
+            updateScore(isTimeUp, distanceKm, points);
+            
+            // Animate arrow with slower speed
+            animateArrowSlower(guessLocation, actualLatLng, () => {
+                setTimeout(() => {
+                    if (currentRound < maxRounds) {
+                        currentRound++;
+                        setupNewRound();
+                    } else {
+                        endGame();
+                    }
+                }, 1000); // Wait 1 second after arrow animation before next round
+            });
+        }
+
+        function showActualLocation(actualLatLng) {
+            if (actualMarker) actualMarker.setMap(null);
+            actualMarker = new google.maps.Marker({
+                position: actualLatLng,
+                map: map,
+                icon: createPixelIcon('red')
+            });
+            
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(guessMarker.getPosition());
+            bounds.extend(actualLatLng);
+            map.fitBounds(bounds);
+        }
+
+        function updateScore(isTimeUp, distanceKm, points) {
+            const scoreElement = document.getElementById("score");
+            scoreElement.innerHTML = `
+                ${isTimeUp ? "Time's up! Random guess made.<br>" : ""}
+                Distance: ${distanceKm} km | Points: +${points}<br>
+                Total Score: ${totalScore}
+            `;
+            scoreElement.classList.add('pulse');
+            setTimeout(() => scoreElement.classList.remove('pulse'), 500);
+        }
+
+        function animateArrowSlower(start, end, callback) {
+            if (animationPath) animationPath.setMap(null);
+            animationPath = new google.maps.Polyline({
+                path: [start, start],
+                icons: [{
+                    icon: createArrowSymbol(),
+                    offset: '100%'
+                }],
+                map: map,
+                strokeColor: '#ff0',
+                strokeOpacity: 0.8,
+                strokeWeight: 2
+            });
+
+            let step = 0;
+            const numSteps = 100; // Increase number of steps for smoother animation
+            const animationStep = window.setInterval(() => {
+                step++;
+                if (step > numSteps) {
+                    clearInterval(animationStep);
+                    if (callback) callback();
+                    return;
+                }
+                const are_we_there_yet = google.maps.geometry.spherical.interpolate(start, end, step / numSteps);
+                animationPath.setPath([start, are_we_there_yet]);
+            }, 20); // Increase interval to slow down animation (was 10)
+        }
+
+        function calculatePoints(distance) {
+            const maxDistance = 1500000; // Approx. max distance in Japan (meters)
+            const maxPoints = 5000;
+            
+            if (distance === 0) return maxPoints;
+            
+            // Exponential decay function with a steeper curve
+            const points = Math.round(maxPoints * Math.exp(-distance / 50000));
+            
+            return Math.max(0, points);
+        }
+
+        function createArrowSymbol(scale = 3) {
+            return {
+                path: 'M 0,-4 L 4,0 L 0,4 L 0,-4',
+                fillColor: '#ff0',
+                fillOpacity: 1,
+                scale: scale,
+                strokeColor: '#ff0',
+                strokeWeight: 1
+            };
+        }
+
+        function startTimer() {
+            let timeLeft = 120; // 2 minutes
+            updateTimerDisplay(timeLeft);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay(timeLeft);
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    submitGuess(true); // This will trigger the automatic submission
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay(timeLeft) {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            const maxPossibleScore = 5000 * maxRounds;
+            const scorePercentage = (totalScore / maxPossibleScore) * 100;
+            let assessment = getJapaneseLevel(scorePercentage);
+
+            document.getElementById("game-container").innerHTML = `
+                <div id="result-container">
+                    <h1>Japan-tsū: Game Over</h1>
+                    <div id="final-score">
+                        <p>Final Score: ${totalScore} / ${maxPossibleScore}</p>
+                        <p>Percentage: ${scorePercentage.toFixed(2)}%</p>
+                        <p>Level: ${assessment}</p>
+                    </div>
+                    <p id="game-url">Play at: japan2.xyz</p>
+                </div>
+                <button onclick="shareResult()">Share Result</button>
+                <button onclick="resetGameGlobal()">Play Again</button>
+            `;
+
+            // Apply styles to result container
+            const resultContainer = document.getElementById('result-container');
+            resultContainer.style.backgroundColor = '#1a1a1a';
+            resultContainer.style.color = '#33ff33';
+            resultContainer.style.padding = '20px';
+            resultContainer.style.border = '4px solid #33ff33';
+            resultContainer.style.boxShadow = '0 0 0 4px #006400, 0 0 10px rgba(51, 255, 51, 0.5)';
+            resultContainer.style.fontFamily = "'Press Start 2P', cursive";
+            resultContainer.style.textAlign = 'center';
+            resultContainer.style.width = '300px';
+            resultContainer.style.margin = '0 auto';
+
+            // Style the URL specifically
+            document.getElementById('game-url').style.marginTop = '20px';
+            document.getElementById('game-url').style.fontSize = '12px';
+            document.getElementById('game-url').style.color = '#33ff33';
+        }
+
+        function getJapaneseLevel(percentage) {
+            if (percentage >= 90) return "日本地理マスター (Nihon Chiri Master)";
+            if (percentage >= 70) return "日本通 (Nihon-tsū)";
+            if (percentage >= 50) return "地理オタク (Chiri Otaku)";
+            if (percentage >= 30) return "旅行好き (Ryokō-zuki)";
+            return "駅前迷子 (Ekimae Maigo)";
+        }
+
+        function resetGame() {
+            totalScore = 0;
+            currentRound = 1;
+            clearMap();
+            usedLocations = []; // Reset used locations
+
+            // Reset the game container to its initial state
+            document.getElementById("game-container").innerHTML = `
+                <h1>Japan-tsū</h1>
+                <div id="timer">2:00</div>
+                <div id="panorama"></div>
+                <div id="map"></div>
+                <button onclick="submitGuess()">Submit Guess</button>
+                <div id="score">Total Score: 0</div>
+                <div id="round">Round: 1 / 5</div>
+            `;
+
+            // Reinitialize the map and panorama
+            initGame();
+        }
+
+        function resetGameGlobal() {
+            resetGame();
+            setupNewRound();
+        }
+
+        function shareResult() {
+            const resultContainer = document.getElementById('result-container');
+            
+            html2canvas(resultContainer, {
+                backgroundColor: null,
+                scale: 2, // Increase resolution
+            }).then(canvas => {
+                canvas.toBlob(blob => {
+                    const filesArray = [
+                        new File(
+                            [blob],
+                            'japan-tsu-result.png',
+                            {
+                                type: 'image/png',
+                                lastModified: new Date().getTime()
+                            }
+                        )
+                    ];
+                    
+                    const shareData = {
+                        files: filesArray,
+                        title: 'My Japan-tsū Result',
+                        text: `I scored ${totalScore} points in Japan-tsū! Can you beat my score? Play at japan2.xyz`,
+                        url: 'https://japan2.xyz'
+                    };
+                    
+                    if (navigator.canShare && navigator.canShare(shareData)) {
+                        navigator.share(shareData)
+                            .then(() => console.log('Share was successful.'))
+                            .catch((error) => console.log('Sharing failed', error));
+                    } else {
+                        console.log(`Your system doesn't support sharing files.`);
+                        // Fallback for systems that don't support file sharing
+                        const shareData = {
+                            title: 'My Japan-tsū Result',
+                            text: `I scored ${totalScore} points in Japan-tsū! Can you beat my score? Play at japan2.xyz`,
+                            url: 'https://japan2.xyz'
+                        };
+                        navigator.share(shareData);
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
