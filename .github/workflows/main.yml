@@ -24,10 +24,11 @@ jobs:
     
     - name: Copy files
       run: |
+        rm -rf dist
         mkdir dist
         cp index.html dist/
-        cp -R css dist/
-        cp -R js dist/
+        cp -R css dist/ || true
+        cp -R js dist/ || true
         # Add any other files or directories you need to copy
     
     - name: Deploy
