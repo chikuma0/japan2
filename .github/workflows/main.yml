@@ -36,3 +36,5 @@ jobs:
         branch: gh-pages
         folder: dist
         token: ${{ secrets.DEPLOY_TOKEN }}
+      env:
+        DEBUG: "true"
