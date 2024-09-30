@@ -22,12 +22,13 @@ jobs:
         npm install dotenv
         npm install
     
-    - name: Build
+    - name: Copy files
       run: |
-        echo "GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}" > .env
-        node build.js
-      env:
-        GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+        mkdir dist
+        cp index.html dist/
+        cp -R css dist/
+        cp -R js dist/
+        # Add any other files or directories you need to copy
     
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@v4
