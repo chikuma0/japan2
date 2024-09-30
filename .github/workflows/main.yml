@@ -31,6 +31,13 @@ jobs:
         cp -R js dist/ || true
         # Add any other files or directories you need to copy
     
+    - name: Build
+      run: |
+        npm install dotenv
+        node build.js
+      env:
+        GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+    
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@v4
       with:
