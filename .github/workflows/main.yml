@@ -8,25 +8,27 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3  # Updated from v2 to v3
     
     - name: Set up Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3  # Updated from v2 to v3
       with:
-        node-version: '14'  # or any version you prefer
+        node-version: '16'  # Updated to a more recent version
     
     - name: Install dependencies
-      run: npm ci  # or 'npm install' if you don't have a package-lock.json
+      run: |
+        npm install dotenv
+        npm install  # or 'npm ci' if you have a package-lock.json
     
     - name: Build
       run: |
         echo "GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}" > .env
-        node build.js  # make sure you have this script
+        node build.js
       env:
         GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
     
     - name: Deploy
-      uses: JamesIves/github-pages-deploy-action@4.1.4
+      uses: JamesIves/github-pages-deploy-action@v4  # Updated to v4
       with:
-        branch: gh-pages  # The branch the action should deploy to
-        folder: dist  # The folder the action should deploy
+        branch: gh-pages
+        folder: dist
