@@ -1,1 +1,7 @@
+<<<<<<< HEAD
 .DS_Store
+=======
+# Ignore .env files
+.env
+
+>>>>>>> d05a1643f995eaca61dbc8a517e8389600907494

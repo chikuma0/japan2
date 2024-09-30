@@ -1,0 +1,38 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # This line gives the workflow permission to push to the repository
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Install dependencies
+      run: |
+        npm install dotenv
+        npm install
+    
+    - name: Copy files
+      run: |
+        rm -rf dist
+        mkdir dist
+        cp index.html dist/
+        cp -R css dist/ || true
+        cp -R js dist/ || true
+        # Add any other files or directories you need to copy
+    
+    - name: Deploy
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        branch: gh-pages
+        folder: dist
