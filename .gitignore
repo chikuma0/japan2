@@ -1,6 +1,10 @@
+<<<<<<< HEAD
+.DS_Store
+=======
 # Ignore .env files
 .env
 
+<<<<<<< HEAD
 # Build output
 dist/
 
@@ -24,3 +28,6 @@ npm-debug.log*
 # Optional: Ignore package-lock.json if you want to
 # package-lock.json
 
+=======
+>>>>>>> d05a1643f995eaca61dbc8a517e8389600907494
+>>>>>>> origin/main
