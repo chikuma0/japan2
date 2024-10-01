@@ -172,11 +172,11 @@
         let actualLocation;
         let guessMarker;
         let actualMarker;
+        let animationPath;
         let totalScore = 0;
         let currentRound = 1;
-        const maxRounds = 5;
+        const maxRounds = 5; // or whatever number of rounds you want
         let timerInterval;
-        let animationPath;
         let isImmersiveMode = false;
         let mapLoaded = false;
 
@@ -238,6 +238,7 @@
             }, (data, status) => {
                 if (status === 'OK') {
                     actualLocation = data.location.latLng;
+                    console.log('New round actualLocation set:', actualLocation.lat(), actualLocation.lng());
                     panorama.setPosition(actualLocation);
                     panorama.setPov({
                         heading: Math.random() * 360,
@@ -289,6 +290,9 @@
             console.log("submitGuess called");
             clearInterval(timerInterval);
 
+            console.log("guessMarker:", guessMarker);
+            console.log("actualLocation:", actualLocation);
+
             let guessLocation, distance, score;
 
             if (!guessMarker) {
@@ -298,16 +302,21 @@
                 score = 0;
             } else {
                 guessLocation = guessMarker.getPosition();
+                console.log("guessLocation:", guessLocation.lat(), guessLocation.lng());
+                
+                if (!actualLocation) {
+                    console.error("actualLocation is not set");
+                    return;
+                }
+                
                 distance = google.maps.geometry.spherical.computeDistanceBetween(guessLocation, actualLocation) / 1000; // Convert to km
                 score = calculateScore(distance);
             }
 
-            totalScore += score;
-
-            console.log("Guess location:", guessLocation ? `${guessLocation.lat()}, ${guessLocation.lng()}` : "No guess");
-            console.log("Actual location:", actualLocation.lat(), actualLocation.lng());
             console.log("Distance:", distance);
             console.log("Score for this round:", score);
+
+            totalScore += score;
             console.log("Total score:", totalScore);
 
             // Display result
@@ -410,16 +419,17 @@
             }, 20); // Increase interval to slow down animation (was 10)
         }
 
-        function calculatePoints(distance) {
-            const maxDistance = 1500000; // Approx. max distance in Japan (meters)
-            const maxPoints = 5000;
-            
-            if (distance === 0) return maxPoints;
-            
-            // Exponential decay function with a steeper curve
-            const points = Math.round(maxPoints * Math.exp(-distance / 50000));
-            
-            return Math.max(0, points);
+        function calculateScore(distance) {
+            console.log("Calculating score for distance:", distance);
+            if (isNaN(distance) || distance === Infinity) {
+                console.error('Invalid distance:', distance);
+                return 0;
+            }
+            const maxDistance = 2000; // km
+            const maxScore = 5000;
+            let score = Math.max(0, Math.round(maxScore * (1 - distance / maxDistance)));
+            console.log("Calculated score:", score);
+            return score;
         }
 
         function createArrowSymbol(scale = 3) {
