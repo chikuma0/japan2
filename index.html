@@ -81,17 +81,21 @@
         }
 
         .result-card {
-            width: 200px;
-            height: 200px;
+            width: 90%;
+            max-width: 300px;
+            height: auto;
+            aspect-ratio: 1 / 1;
             margin: 20px auto;
-            image-rendering: pixelated;
-            background-size: 100% 100%;
-            animation: pulse 1s infinite alternate;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
         }
 
-        @keyframes pulse {
-            from { transform: scale(1); }
-            to { transform: scale(1.1); }
+        @media (max-width: 600px) {
+            .result-card {
+                width: 80%;
+                max-width: 250px;
+            }
         }
 
         .card-master { background-image: url('images/master-card.png'); }
@@ -99,6 +103,45 @@
         .card-intermediate { background-image: url('images/intermediate-card.png'); }
         .card-beginner { background-image: url('images/beginner-card.png'); }
         .card-novice { background-image: url('images/novice-card.png'); }
+
+        /* Add this to your CSS */
+        #immersive-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            display: none;
+        }
+
+        #panorama-fullscreen {
+            width: 100%;
+            height: 100%;
+        }
+
+        #mini-map-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #mini-map {
+            width: 100%;
+            height: 100%;
+        }
+
+        #toggle-map {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            z-index: 1001;
+        }
     </style>
 </head>
 <body>
@@ -110,6 +153,15 @@
         <button onclick="submitGuess()">Submit Guess</button>
         <div id="score">Total Score: 0</div>
         <div id="round">Round: 1 / 5</div>
+    </div>
+
+    <!-- Add this to your HTML -->
+    <div id="immersive-view">
+        <div id="panorama-fullscreen"></div>
+        <div id="mini-map-container">
+            <div id="mini-map"></div>
+            <button id="toggle-map">Switch to Map</button>
+        </div>
     </div>
 
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCQsM6IW_drrcpvIUBB545G9j4rUGVvIE&libraries=geometry&callback=initMap"></script>
@@ -125,6 +177,7 @@
         let currentRound = 1;
         const maxRounds = 5;
         let timerInterval;
+        let isImmersiveMode = false;
 
         // Expand this list with more diverse locations across Japan
         const japaneseLocations = [
@@ -203,47 +256,42 @@
         }
 
         function setupNewRound() {
-            clearMap();
-            setRandomLocation();
-            startTimer();
-            document.getElementById("round").textContent = `Round: ${currentRound} / ${maxRounds}`;
-        }
-
-        function clearMap() {
+            const randomLocation = getRandomLocation();
+            
+            const streetViewService = new google.maps.StreetViewService();
+            streetViewService.getPanorama({ location: randomLocation, radius: 50, source: 'outdoor' }, (data, status) => {
+                if (status === 'OK') {
+                    actualLocation = data.location.latLng;
+                    panorama.setPosition(actualLocation);
+                    panorama.setPov({
+                        heading: Math.random() * 360,
+                        pitch: 0
+                    });
+                } else {
+                    console.error('Street View data not found for this location.');
+                    setupNewRound(); // Try again with a new location
+                }
+            });
+            
+            // Reset map and markers
+            map.setCenter({ lat: 37.5, lng: 137 });
+            map.setZoom(5);
             if (guessMarker) guessMarker.setMap(null);
             if (actualMarker) actualMarker.setMap(null);
-            if (animationPath) animationPath.setMap(null);
-            map.setZoom(5);
-            map.setCenter({ lat: 37.5, lng: 137 });
+            
+            startTimer();
         }
 
-        function updateUI() {
-            document.getElementById("score").textContent = `Total Score: ${totalScore}`;
-            document.getElementById("round").textContent = `Round: ${currentRound} / ${maxRounds}`;
-            document.getElementById("result").textContent = "";
-            document.getElementById("panorama").style.display = "block";
-            document.getElementById("map").style.display = "block";
-        }
-
-        function setRandomLocation() {
+        function getRandomLocation() {
             if (usedLocations.length === japaneseLocations.length) {
                 usedLocations = []; // Reset if all locations have been used
             }
 
             let availableLocations = japaneseLocations.filter(loc => !usedLocations.includes(loc));
-            actualLocation = availableLocations[Math.floor(Math.random() * availableLocations.length)];
-            usedLocations.push(actualLocation);
+            const randomLocation = availableLocations[Math.floor(Math.random() * availableLocations.length)];
+            usedLocations.push(randomLocation);
 
-            // Use Street View Service to check for imagery
-            const streetViewService = new google.maps.StreetViewService();
-            streetViewService.getPanorama({ location: actualLocation, radius: 50 }, (data, status) => {
-                if (status === 'OK') {
-                    panorama.setPosition(actualLocation);
-                } else {
-                    // If no street view found, try another location
-                    setRandomLocation();
-                }
-            });
+            return randomLocation;
         }
 
         function placeGuessMarker(latLng) {
@@ -433,7 +481,7 @@
 
         function getJapaneseLevel(percentage) {
             if (percentage >= 90) return "日本地理マスター (Nihon Chiri Master)";
-            if (percentage >= 70) return "日本通 (Nihon-tsū)";
+            if (percentage >= 70) return "���本通 (Nihon-tsū)";
             if (percentage >= 50) return "地理オタク (Chiri Otaku)";
             if (percentage >= 30) return "旅行好き (Ryokō-zuki)";
             return "駅前迷子 (Ekimae Maigo)";
@@ -540,6 +588,50 @@
 
             setupNewRound();
         }
+
+        function toggleImmersiveMode() {
+            isImmersiveMode = !isImmersiveMode;
+            const immersiveView = document.getElementById('immersive-view');
+            immersiveView.style.display = isImmersiveMode ? 'block' : 'none';
+            
+            if (isImmersiveMode) {
+                // Move panorama to fullscreen view
+                const panoramaFullscreen = new google.maps.StreetViewPanorama(
+                    document.getElementById("panorama-fullscreen"),
+                    {
+                        position: panorama.getPosition(),
+                        pov: panorama.getPov(),
+                        zoom: panorama.getZoom(),
+                        addressControl: false,
+                        showRoadLabels: false
+                    }
+                );
+                
+                // Create mini-map
+                const miniMap = new google.maps.Map(document.getElementById("mini-map"), {
+                    center: map.getCenter(),
+                    zoom: map.getZoom(),
+                    disableDefaultUI: true,
+                    gestureHandling: 'none'
+                });
+            }
+        }
+
+        document.getElementById('toggle-map').addEventListener('click', () => {
+            // Switch between panorama and map view
+            const panoramaFullscreen = document.getElementById('panorama-fullscreen');
+            const miniMap = document.getElementById('mini-map-container');
+            
+            if (panoramaFullscreen.style.display !== 'none') {
+                panoramaFullscreen.style.display = 'none';
+                miniMap.style.width = '100%';
+                miniMap.style.height = '100%';
+            } else {
+                panoramaFullscreen.style.display = 'block';
+                miniMap.style.width = '200px';
+                miniMap.style.height = '200px';
+            }
+        });
     </script>
 </body>
 </html>
