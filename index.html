@@ -164,7 +164,7 @@
         </div>
     </div>
 
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=geometry&callback=initMap"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_PLACEHOLDER&libraries=geometry&callback=initMap"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
         let panorama;
@@ -612,6 +612,12 @@
 
         function initMap() {
             console.log("initMap called");
+            if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+                console.log("Google Maps API not loaded yet, retrying...");
+                setTimeout(initMap, 100);
+                return;
+            }
+            
             const mapElement = document.getElementById("map");
             const panoramaElement = document.getElementById("panorama");
             if (!mapElement || !panoramaElement) {
