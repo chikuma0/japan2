@@ -142,6 +142,25 @@
             left: 5px;
             z-index: 1001;
         }
+
+        #exit-immersive {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1002;
+        }
+
+        #immersive-timer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1002;
+            font-size: 24px;
+            color: #33ff33;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -151,7 +170,6 @@
         <div id="panorama"></div>
         <div id="map"></div>
         <button id="submit-guess" onclick="submitGuess()">Submit Guess</button>
-        <button id="toggle-immersive" onclick="toggleImmersiveMode()">Toggle Immersive Mode</button>
         <div id="score">Total Score: 0</div>
         <div id="round">Round: 1 / 5</div>
         <div id="result" style="display: none;"></div>
@@ -164,6 +182,8 @@
             <div id="mini-map"></div>
             <button id="toggle-map">Switch to Map</button>
         </div>
+        <button id="exit-immersive" onclick="toggleImmersiveMode()">Exit Immersive Mode</button>
+        <div id="immersive-timer"></div>
     </div>
 
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCQsM6IW_drrcpvIUBB545G9j4rUGVvIE&libraries=geometry&callback=initMap"></script>
@@ -270,13 +290,13 @@
             return { lat, lng };
         }
 
-        function placeGuessMarker(latLng) {
+        function placeGuessMarker(latLng, targetMap = map) {
             if (guessMarker) {
                 guessMarker.setMap(null);
             }
             guessMarker = new google.maps.Marker({
                 position: latLng,
-                map: map,
+                map: targetMap,
                 icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
             });
             console.log("Guess marker placed at:", latLng.lat(), latLng.lng());
@@ -325,6 +345,11 @@
 
                 totalScore += score;
                 console.log("Total score:", totalScore);
+
+                // Exit immersive mode if active
+                if (isImmersiveMode) {
+                    toggleImmersiveMode();
+                }
 
                 // Display result
                 const resultElement = document.getElementById("result");
@@ -471,11 +496,14 @@
         function startTimer() {
             let timeLeft = 120; // 2 minutes in seconds
             const timerElement = document.getElementById("timer");
+            const immersiveTimerElement = document.getElementById("immersive-timer");
 
             function updateTimer() {
                 const minutes = Math.floor(timeLeft / 60);
                 const seconds = timeLeft % 60;
-                timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                const timerText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                timerElement.textContent = timerText;
+                immersiveTimerElement.textContent = timerText;
 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
@@ -613,9 +641,12 @@
         function toggleImmersiveMode() {
             isImmersiveMode = !isImmersiveMode;
             const immersiveView = document.getElementById('immersive-view');
-            immersiveView.style.display = isImmersiveMode ? 'block' : 'none';
+            const gameContainer = document.getElementById('game-container');
             
             if (isImmersiveMode) {
+                immersiveView.style.display = 'block';
+                gameContainer.style.display = 'none';
+                
                 // Move panorama to fullscreen view
                 const panoramaFullscreen = new google.maps.StreetViewPanorama(
                     document.getElementById("panorama-fullscreen"),
@@ -632,16 +663,33 @@
                 const miniMap = new google.maps.Map(document.getElementById("mini-map"), {
                     center: map.getCenter(),
                     zoom: map.getZoom(),
-                    disableDefaultUI: true,
-                    gestureHandling: 'none'
+                    gestureHandling: 'greedy'
+                });
+
+                // Add click listener to mini-map
+                miniMap.addListener("click", (e) => {
+                    placeGuessMarker(e.latLng, miniMap);
                 });
 
                 // Make sure the mini-map container is visible
                 document.getElementById('mini-map-container').style.display = 'block';
+
+                // Update timer in immersive mode
+                updateImmersiveTimer();
             } else {
-                // Hide the mini-map container when exiting immersive mode
-                document.getElementById('mini-map-container').style.display = 'none';
+                immersiveView.style.display = 'none';
+                gameContainer.style.display = 'block';
+                
+                // Transfer the guess marker from mini-map to main map if it exists
+                if (guessMarker) {
+                    guessMarker.setMap(map);
+                }
             }
+        }
+
+        function updateImmersiveTimer() {
+            const immersiveTimerElement = document.getElementById("immersive-timer");
+            immersiveTimerElement.textContent = document.getElementById("timer").textContent;
         }
 
         document.getElementById('toggle-map').addEventListener('click', () => {
