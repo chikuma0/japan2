@@ -232,10 +232,19 @@
 
         let usedLocations = [];
 
-        function initGame() {
+        function initMap() {
+            console.log("initMap called");
+            if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+                console.log("Google Maps API not loaded yet, retrying...");
+                setTimeout(initMap, 100);
+                return;
+            }
+            
+            // Your existing map initialization code here
             panorama = new google.maps.StreetViewPanorama(
                 document.getElementById("panorama"),
                 {
+                    position: { lat: 35.6895, lng: 139.6917 },
                     pov: { heading: 0, pitch: 0 },
                     zoom: 1,
                     addressControl: false,
@@ -246,17 +255,14 @@
             map = new google.maps.Map(document.getElementById("map"), {
                 center: { lat: 37.5, lng: 137 },
                 zoom: 5,
-                gestureHandling: 'greedy' // This allows zooming without the Control key
+                gestureHandling: 'greedy'
             });
 
             map.addListener("click", (e) => {
-                try {
-                    placeGuessMarker(e.latLng);
-                } catch (error) {
-                    console.error("Error placing guess marker:", error);
-                }
+                placeGuessMarker(e.latLng);
             });
 
+            mapLoaded = true;
             setupNewRound();
         }
 
@@ -558,7 +564,7 @@
             `;
 
             // Reinitialize the map and panorama
-            initGame();
+            initMap();
         }
 
         function resetGameGlobal() {
@@ -608,52 +614,6 @@
                     }
                 });
             });
-        }
-
-        function initMap() {
-            console.log("initMap called");
-            if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
-                console.log("Google Maps API not loaded yet, retrying...");
-                setTimeout(initMap, 100);
-                return;
-            }
-            
-            const mapElement = document.getElementById("map");
-            const panoramaElement = document.getElementById("panorama");
-            if (!mapElement || !panoramaElement) {
-                console.error("Map or panorama element not found");
-                return;
-            }
-            panorama = new google.maps.StreetViewPanorama(
-                document.getElementById("panorama"),
-                {
-                    position: { lat: 35.6895, lng: 139.6917 },
-                    pov: { heading: 0, pitch: 0 },
-                    zoom: 1,
-                    addressControl: false,
-                    showRoadLabels: false
-                }
-            );
-
-            map = new google.maps.Map(document.getElementById("map"), {
-                center: { lat: 37.5, lng: 137 },
-                zoom: 5,
-                gestureHandling: 'greedy'
-            });
-
-            map.addListener("click", (e) => {
-                try {
-                    placeGuessMarker(e.latLng);
-                } catch (error) {
-                    console.error("Error placing guess marker:", error);
-                }
-            });
-
-            setupNewRound();
-
-            // At the end of initMap:
-            mapLoaded = true;
-            document.getElementById('submit-guess').disabled = false;
         }
 
         function toggleImmersiveMode() {
