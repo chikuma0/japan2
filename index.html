@@ -150,11 +150,11 @@
                 return;
             }
             
-            // Your existing map initialization code here
+            const initialPosition = getRandomCoordinates();
             panorama = new google.maps.StreetViewPanorama(
                 document.getElementById("panorama"),
                 {
-                    position: { lat: 35.6895, lng: 139.6917 },
+                    position: initialPosition,
                     pov: { heading: 0, pitch: 0 },
                     zoom: 1,
                     addressControl: false,
@@ -193,6 +193,9 @@
             panorama.setPosition(actualLocation);
 
             console.log("Actual location set:", actualLocation);
+
+            // Disable submit button until a guess is made
+            disableSubmitButton();
         }
 
         function getRandomCoordinates() {
