@@ -156,6 +156,19 @@
                 gestureHandling: 'greedy'
             });
 
+            panorama = new google.maps.StreetViewPanorama(
+                document.getElementById("panorama"),
+                {
+                    position: { lat: 37.5, lng: 137 },
+                    pov: { heading: 0, pitch: 0 },
+                    zoom: 1,
+                    addressControl: false,
+                    showRoadLabels: false
+                }
+            );
+
+            map.setStreetView(panorama);
+
             map.addListener("click", (e) => {
                 placeGuessMarker(e.latLng);
             });
@@ -564,6 +577,15 @@
             guessMarker = null;
             actualMarker = null;
             animationPath = null;
+        }
+
+        function updateRoundDisplay() {
+            const roundElement = document.getElementById("round");
+            if (roundElement) {
+                roundElement.textContent = `Round: ${currentRound} / ${maxRounds}`;
+            } else {
+                console.error("Round element not found");
+            }
         }
     </script>
 </body>
