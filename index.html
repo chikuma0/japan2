@@ -150,7 +150,7 @@
         <div id="timer">2:00</div>
         <div id="panorama"></div>
         <div id="map"></div>
-        <button id="submit-guess" onclick="console.log('Submit button clicked'); submitGuess();">Submit Guess</button>
+        <button id="submit-guess" onclick="submitGuess()">Submit Guess</button>
         <div id="score">Total Score: 0</div>
         <div id="round">Round: 1 / 5</div>
     </div>
@@ -260,6 +260,8 @@
                     setupNewRound(); // Try again with a new location
                 }
             });
+
+            enableSubmitButton();
         }
 
         function getRandomCoordinates() {
@@ -278,6 +280,8 @@
                 icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
             });
             console.log("Guess marker placed at:", latLng.lat(), latLng.lng());
+
+            enableSubmitButton();
         }
 
         function createPixelIcon(color) {
@@ -289,8 +293,8 @@
         }
 
         function submitGuess() {
-            alert("submitGuess function called");
             console.log("submitGuess function called");
+            disableSubmitButton();
             try {
                 clearInterval(timerInterval);
 
@@ -371,6 +375,13 @@
             } catch (error) {
                 console.error("Error in submitGuess function:", error);
             }
+
+            // Enable the button again when setting up the next round
+            setTimeout(() => {
+                if (currentRound <= maxRounds) {
+                    enableSubmitButton();
+                }
+            }, 5000);
         }
 
         function showActualLocation(actualLatLng) {
@@ -678,6 +689,20 @@
                 console.error("Submit button not found");
             }
         };
+
+        function enableSubmitButton() {
+            const submitButton = document.getElementById('submit-guess');
+            if (submitButton) {
+                submitButton.disabled = false;
+            }
+        }
+
+        function disableSubmitButton() {
+            const submitButton = document.getElementById('submit-guess');
+            if (submitButton) {
+                submitButton.disabled = true;
+            }
+        }
     </script>
 </body>
 </html>
