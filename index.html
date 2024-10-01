@@ -112,8 +112,7 @@
         <div id="round">Round: 1 / 5</div>
     </div>
 
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCQsM6IW_drrcpvIUBB545G9j4rUGVvIE&callback=initMap">
-    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCQsM6IW_drrcpvIUBB545G9j4rUGVvIE&libraries=geometry&callback=initMap"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
         let panorama;
@@ -511,7 +510,35 @@
         }
 
         function initMap() {
-            // Your map initialization code here
+            console.log("initMap called");
+            const mapElement = document.getElementById("map");
+            const panoramaElement = document.getElementById("panorama");
+            if (!mapElement || !panoramaElement) {
+                console.error("Map or panorama element not found");
+                return;
+            }
+            panorama = new google.maps.StreetViewPanorama(
+                document.getElementById("panorama"),
+                {
+                    position: { lat: 35.6895, lng: 139.6917 },
+                    pov: { heading: 0, pitch: 0 },
+                    zoom: 1,
+                    addressControl: false,
+                    showRoadLabels: false
+                }
+            );
+
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 37.5, lng: 137 },
+                zoom: 5,
+                gestureHandling: 'greedy'
+            });
+
+            map.addListener("click", (e) => {
+                placeGuessMarker(e.latLng);
+            });
+
+            setupNewRound();
         }
     </script>
 </body>
