@@ -294,7 +294,6 @@
 
         function submitGuess() {
             console.log("submitGuess function called");
-            disableSubmitButton();
             try {
                 clearInterval(timerInterval);
 
@@ -329,10 +328,19 @@
 
                 // Display result
                 const resultElement = document.getElementById("result");
-                resultElement.innerHTML = `Distance: ${distance.toFixed(2)} km | Points: +${score}`;
-                resultElement.style.display = "block";
+                if (resultElement) {
+                    resultElement.innerHTML = `Distance: ${distance.toFixed(2)} km | Points: +${score}`;
+                    resultElement.style.display = "block";
+                } else {
+                    console.error("Result element not found");
+                }
 
-                document.getElementById("score").textContent = `Total Score: ${totalScore}`;
+                const scoreElement = document.getElementById("score");
+                if (scoreElement) {
+                    scoreElement.textContent = `Total Score: ${totalScore}`;
+                } else {
+                    console.error("Score element not found");
+                }
 
                 // Show actual location
                 if (actualMarker) actualMarker.setMap(null);
@@ -342,7 +350,7 @@
                     icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
                 });
 
-                // Draw line between guess and actual location if a guess was made
+                // Draw line between guess and actual location
                 if (animationPath) animationPath.setMap(null);
                 if (guessLocation) {
                     animationPath = new google.maps.Polyline({
@@ -366,22 +374,21 @@
                 }
 
                 currentRound++;
-                if (currentRound > maxRounds) {
-                    endGame();
+                const roundElement = document.getElementById("round");
+                if (roundElement) {
+                    if (currentRound > maxRounds) {
+                        endGame();
+                    } else {
+                        roundElement.textContent = `Round: ${currentRound} / ${maxRounds}`;
+                        setTimeout(setupNewRound, 5000);
+                    }
                 } else {
-                    document.getElementById("round").textContent = `Round: ${currentRound} / ${maxRounds}`;
-                    setTimeout(setupNewRound, 5000);
+                    console.error("Round element not found");
                 }
+
             } catch (error) {
                 console.error("Error in submitGuess function:", error);
             }
-
-            // Enable the button again when setting up the next round
-            setTimeout(() => {
-                if (currentRound <= maxRounds) {
-                    enableSubmitButton();
-                }
-            }, 5000);
         }
 
         function showActualLocation(actualLatLng) {
@@ -678,6 +685,7 @@
 
         window.onload = function() {
             console.log("Window loaded");
+            checkElements();
             var submitButton = document.getElementById('submit-guess');
             if (submitButton) {
                 console.log("Submit button found");
@@ -702,6 +710,18 @@
             if (submitButton) {
                 submitButton.disabled = true;
             }
+        }
+
+        function checkElements() {
+            const elements = ['result', 'score', 'round', 'submit-guess'];
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (!element) {
+                    console.error(`Element with id "${id}" not found`);
+                } else {
+                    console.log(`Element with id "${id}" found`);
+                }
+            });
         }
     </script>
 </body>
