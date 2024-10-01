@@ -267,6 +267,7 @@
                         heading: Math.random() * 360,
                         pitch: 0
                     });
+                    console.log('New round location:', actualLocation.lat(), actualLocation.lng());
                 } else {
                     console.error('Street View data not found for this location.');
                     setupNewRound(); // Try again with a new location
@@ -313,37 +314,69 @@
             };
         }
 
-        function submitGuess(isTimeUp = false) {
-            clearInterval(timerInterval);
-            
-            if (isTimeUp || !guessMarker) {
-                console.log("Time's up or no guess made. Making a random guess.");
-                const randomLat = Math.random() * (45.7 - 24.2) + 24.2;
-                const randomLng = Math.random() * (153.9 - 122.9) + 122.9;
-                placeGuessMarker(new google.maps.LatLng(randomLat, randomLng));
+        function submitGuess() {
+            if (!guessMarker) {
+                alert("Please place a guess on the map first!");
+                return;
             }
 
+            clearInterval(timerInterval);
+
             const guessLocation = guessMarker.getPosition();
-            const actualLatLng = new google.maps.LatLng(actualLocation.lat, actualLocation.lng);
-            const distance = google.maps.geometry.spherical.computeDistanceBetween(guessLocation, actualLatLng);
-            const distanceKm = (distance / 1000).toFixed(2);
-            const points = calculatePoints(distance);
-            totalScore += points;
-            
-            showActualLocation(actualLatLng);
-            updateScore(isTimeUp, distanceKm, points);
-            
-            // Animate arrow with slower speed
-            animateArrowSlower(guessLocation, actualLatLng, () => {
-                setTimeout(() => {
-                    if (currentRound < maxRounds) {
-                        currentRound++;
-                        setupNewRound();
-                    } else {
-                        endGame();
-                    }
-                }, 1000); // Wait 1 second after arrow animation before next round
+            const distance = google.maps.geometry.spherical.computeDistanceBetween(guessLocation, actualLocation) / 1000; // Convert to km
+
+            if (isNaN(distance) || !isFinite(distance)) {
+                console.error('Invalid distance calculation:', guessLocation, actualLocation);
+                return;
+            }
+
+            const score = calculateScore(distance);
+            totalScore += score;
+
+            // Display result
+            const resultElement = document.getElementById("result");
+            resultElement.innerHTML = `Distance: ${distance.toFixed(2)} km | Points: +${score}`;
+            resultElement.style.display = "block";
+
+            document.getElementById("score").textContent = `Total Score: ${totalScore}`;
+
+            // Show actual location
+            if (actualMarker) actualMarker.setMap(null);
+            actualMarker = new google.maps.Marker({
+                position: actualLocation,
+                map: map,
+                icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
             });
+
+            // Draw line between guess and actual location
+            if (animationPath) animationPath.setMap(null);
+            animationPath = new google.maps.Polyline({
+                path: [guessLocation, actualLocation],
+                geodesic: true,
+                strokeColor: '#FF0000',
+                strokeOpacity: 1.0,
+                strokeWeight: 2,
+                map: map
+            });
+
+            // Fit bounds to show both markers
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(guessLocation);
+            bounds.extend(actualLocation);
+            map.fitBounds(bounds);
+
+            currentRound++;
+            if (currentRound > maxRounds) {
+                endGame();
+            } else {
+                document.getElementById("round").textContent = `Round: ${currentRound} / ${maxRounds}`;
+                setTimeout(setupNewRound, 5000);
+            }
+
+            console.log('Guess location:', guessLocation.lat(), guessLocation.lng());
+            console.log('Actual location:', actualLocation.lat(), actualLocation.lng());
+            console.log('Distance:', distance);
+            console.log('Score:', score);
         }
 
         function showActualLocation(actualLatLng) {
@@ -481,7 +514,7 @@
 
         function getJapaneseLevel(percentage) {
             if (percentage >= 90) return "日本地理マスター (Nihon Chiri Master)";
-            if (percentage >= 70) return "���本通 (Nihon-tsū)";
+            if (percentage >= 70) return "本通 (Nihon-tsū)";
             if (percentage >= 50) return "地理オタク (Chiri Otaku)";
             if (percentage >= 30) return "旅行好き (Ryokō-zuki)";
             return "駅前迷子 (Ekimae Maigo)";
@@ -632,6 +665,17 @@
                 miniMap.style.height = '200px';
             }
         });
+
+        function calculateScore(distance) {
+            if (isNaN(distance) || distance === Infinity) {
+                console.error('Invalid distance:', distance);
+                return 0;
+            }
+            const maxDistance = 2000; // km
+            const maxScore = 5000;
+            let score = Math.max(0, Math.round(maxScore * (1 - distance / maxDistance)));
+            return score;
+        }
     </script>
 </body>
 </html>
