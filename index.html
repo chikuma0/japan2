@@ -150,18 +150,6 @@
                 return;
             }
             
-            const initialPosition = getRandomCoordinates();
-            panorama = new google.maps.StreetViewPanorama(
-                document.getElementById("panorama"),
-                {
-                    position: initialPosition,
-                    pov: { heading: 0, pitch: 0 },
-                    zoom: 1,
-                    addressControl: false,
-                    showRoadLabels: false
-                }
-            );
-
             map = new google.maps.Map(document.getElementById("map"), {
                 center: { lat: 37.5, lng: 137 },
                 zoom: 5,
@@ -190,7 +178,22 @@
 
             // Set a new actual location
             actualLocation = getRandomCoordinates();
-            panorama.setPosition(actualLocation);
+            
+            // Initialize panorama with the new location
+            if (!panorama) {
+                panorama = new google.maps.StreetViewPanorama(
+                    document.getElementById("panorama"),
+                    {
+                        position: actualLocation,
+                        pov: { heading: 0, pitch: 0 },
+                        zoom: 1,
+                        addressControl: false,
+                        showRoadLabels: false
+                    }
+                );
+            } else {
+                panorama.setPosition(actualLocation);
+            }
 
             console.log("Actual location set:", actualLocation);
 
