@@ -118,7 +118,7 @@
         <button onclick="toggleMapView()">Switch View</button>
     </div>
 
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=geometry&callback=initMap"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCQsM6IW_drrcpvIUBB545G9j4rUGVvIE&libraries=geometry&callback=initMap"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
         let panorama;
@@ -144,37 +144,41 @@
 
         function initMap() {
             console.log("initMap called");
-            if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
-                console.log("Google Maps API not loaded yet, retrying...");
-                setTimeout(initMap, 100);
-                return;
-            }
-            
-            map = new google.maps.Map(document.getElementById("map"), {
-                center: { lat: 37.5, lng: 137 },
-                zoom: 5,
-                gestureHandling: 'greedy'
-            });
-
-            panorama = new google.maps.StreetViewPanorama(
-                document.getElementById("panorama"),
-                {
-                    position: { lat: 37.5, lng: 137 },
-                    pov: { heading: 0, pitch: 0 },
-                    zoom: 1,
-                    addressControl: false,
-                    showRoadLabels: false
+            try {
+                if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+                    console.log("Google Maps API not loaded yet, retrying...");
+                    setTimeout(initMap, 100);
+                    return;
                 }
-            );
+                
+                map = new google.maps.Map(document.getElementById("map"), {
+                    center: { lat: 37.5, lng: 137 },
+                    zoom: 5,
+                    gestureHandling: 'greedy'
+                });
 
-            map.setStreetView(panorama);
+                panorama = new google.maps.StreetViewPanorama(
+                    document.getElementById("panorama"),
+                    {
+                        position: { lat: 37.5, lng: 137 },
+                        pov: { heading: 0, pitch: 0 },
+                        zoom: 1,
+                        addressControl: false,
+                        showRoadLabels: false
+                    }
+                );
 
-            map.addListener("click", (e) => {
-                placeGuessMarker(e.latLng);
-            });
+                map.setStreetView(panorama);
 
-            mapLoaded = true;
-            setupNewRound();
+                map.addListener("click", (e) => {
+                    placeGuessMarker(e.latLng);
+                });
+
+                mapLoaded = true;
+                setupNewRound();
+            } catch (error) {
+                console.error("Error in initMap:", error);
+            }
         }
 
         function setupNewRound() {
@@ -448,7 +452,7 @@
             if (percentage >= 90) return "日本地理マスター (Nihon Chiri Master)";
             if (percentage >= 70) return "本通 (Nihon-tsū)";
             if (percentage >= 50) return "地理オタク (Chiri Otaku)";
-            if (percentage >= 30) return "旅��好き (Ryokō-zuki)";
+            if (percentage >= 30) return "旅好き (Ryokō-zuki)";
             return "駅前迷子 (Ekimae Maigo)";
         }
 
