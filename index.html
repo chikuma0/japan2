@@ -115,6 +115,7 @@
         <div id="score">Total Score: 0</div>
         <div id="round">Round: 1 / 5</div>
         <div id="result" style="display: none;"></div>
+        <button onclick="toggleMapView()">Switch View</button>
     </div>
 
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCQsM6IW_drrcpvIUBB545G9j4rUGVvIE&libraries=geometry&callback=initMap"></script>
@@ -131,6 +132,7 @@
         const maxRounds = 5; // or whatever number of rounds you want
         let timerInterval;
         let mapLoaded = false;
+        let isMapView = false;
 
         const JAPAN_BOUNDS = {
             north: 45.551483,
@@ -393,7 +395,7 @@
             });
 
             let step = 0;
-            const numSteps = 200; // Increase for slower animation
+            const numSteps = 100; // Reduced from 200 to double the speed
             const animationStep = window.setInterval(() => {
                 step++;
                 if (step > numSteps) {
@@ -403,7 +405,7 @@
                 }
                 const are_we_there_yet = google.maps.geometry.spherical.interpolate(start, end, step / numSteps);
                 animationPath.setPath([start, are_we_there_yet]);
-            }, 30); // Increase for slower animation
+            }, 15); // Reduced from 30 to double the speed
         }
 
         function calculateScore(distance) {
@@ -454,7 +456,7 @@
 
         function handleTimeUp() {
             alert("Time's up! Moving to the next round.");
-            submitGuess(); // This will handle submitting the current guess (or no guess) and moving to the next round
+            submitGuess();
         }
 
         function endGame() {
@@ -597,6 +599,26 @@
                     console.log(`Element with id "${id}" found`);
                 }
             });
+        }
+
+        function toggleMapView() {
+            isMapView = !isMapView;
+            const panoramaElement = document.getElementById('panorama');
+            const mapElement = document.getElementById('map');
+            
+            if (isMapView) {
+                panoramaElement.style.display = 'none';
+                mapElement.style.display = 'block';
+                mapElement.style.height = '100vh';
+                map.setOptions({
+                    fullscreenControl: true,
+                    gestureHandling: 'greedy'
+                });
+            } else {
+                panoramaElement.style.display = 'block';
+                mapElement.style.display = 'none';
+                panoramaElement.style.height = '100vh';
+            }
         }
     </script>
 </body>
