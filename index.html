@@ -644,6 +644,15 @@
                 panoramaElement.style.height = '100vh';
             }
         }
+
+        function clearMap() {
+            if (guessMarker) guessMarker.setMap(null);
+            if (actualMarker) actualMarker.setMap(null);
+            if (animationPath) animationPath.setMap(null);
+            guessMarker = null;
+            actualMarker = null;
+            animationPath = null;
+        }
     </script>
 </body>
 </html>
