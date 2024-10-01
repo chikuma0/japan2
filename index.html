@@ -180,57 +180,12 @@
         let isImmersiveMode = false;
         let mapLoaded = false;
 
-        // Expand this list with more diverse locations across Japan
-        const japaneseLocations = [
-            { lat: 43.0618, lng: 141.3545, name: "Sapporo, Hokkaido" },
-            { lat: 40.8246, lng: 140.7401, name: "Aomori, Aomori" },
-            { lat: 39.7036, lng: 139.1527, name: "Morioka, Iwate" },
-            { lat: 38.2688, lng: 140.8721, name: "Sendai, Miyagi" },
-            { lat: 39.7186, lng: 139.6424, name: "Akita, Akita" },
-            { lat: 38.2405, lng: 136.3630, name: "Yamagata, Yamagata" },
-            { lat: 37.7503, lng: 140.4675, name: "Fukushima, Fukushima" },
-            { lat: 36.3416, lng: 139.4467, name: "Mito, Ibaraki" },
-            { lat: 36.5662, lng: 139.8835, name: "Utsunomiya, Tochigi" },
-            { lat: 36.3911, lng: 139.0608, name: "Maebashi, Gunma" },
-            { lat: 35.8569, lng: 139.6489, name: "Saitama, Saitama" },
-            { lat: 35.6047, lng: 139.6917, name: "Shinjuku, Tokyo" },
-            { lat: 35.4478, lng: 139.6425, name: "Yokohama, Kanagawa" },
-            { lat: 37.9022, lng: 139.0236, name: "Niigata, Niigata" },
-            { lat: 36.6953, lng: 137.2113, name: "Toyama, Toyama" },
-            { lat: 36.5946, lng: 136.6256, name: "Kanazawa, Ishikawa" },
-            { lat: 36.0652, lng: 136.2195, name: "Fukui, Fukui" },
-            { lat: 35.6635, lng: 138.5684, name: "Kofu, Yamanashi" },
-            { lat: 36.6513, lng: 138.1811, name: "Nagano, Nagano" },
-            { lat: 35.3913, lng: 136.7222, name: "Gifu, Gifu" },
-            { lat: 34.9769, lng: 138.3831, name: "Shizuoka, Shizuoka" },
-            { lat: 35.1815, lng: 136.9066, name: "Nagoya, Aichi" },
-            { lat: 34.7302, lng: 136.5086, name: "Tsu, Mie" },
-            { lat: 35.0045, lng: 135.8686, name: "Otsu, Shiga" },
-            { lat: 35.0116, lng: 135.7681, name: "Kyoto, Kyoto" },
-            { lat: 34.6937, lng: 135.5023, name: "Osaka, Osaka" },
-            { lat: 34.6913, lng: 135.1830, name: "Kobe, Hyogo" },
-            { lat: 34.6851, lng: 135.8048, name: "Nara, Nara" },
-            { lat: 34.2260, lng: 135.1675, name: "Wakayama, Wakayama" },
-            { lat: 35.5039, lng: 134.2383, name: "Tottori, Tottori" },
-            { lat: 35.4723, lng: 133.0504, name: "Matsue, Shimane" },
-            { lat: 34.6618, lng: 133.9344, name: "Okayama, Okayama" },
-            { lat: 34.3853, lng: 132.4553, name: "Hiroshima, Hiroshima" },
-            { lat: 34.1859, lng: 131.4706, name: "Yamaguchi, Yamaguchi" },
-            { lat: 34.0660, lng: 134.5591, name: "Tokushima, Tokushima" },
-            { lat: 34.3401, lng: 134.0434, name: "Takamatsu, Kagawa" },
-            { lat: 33.8416, lng: 132.7678, name: "Matsuyama, Ehime" },
-            { lat: 33.5597, lng: 133.5311, name: "Kochi, Kochi" },
-            { lat: 33.6064, lng: 130.4183, name: "Fukuoka, Fukuoka" },
-            { lat: 33.2494, lng: 130.2988, name: "Saga, Saga" },
-            { lat: 32.7448, lng: 129.8737, name: "Nagasaki, Nagasaki" },
-            { lat: 32.8032, lng: 130.7079, name: "Kumamoto, Kumamoto" },
-            { lat: 33.2382, lng: 131.6125, name: "Oita, Oita" },
-            { lat: 31.9111, lng: 131.4239, name: "Miyazaki, Miyazaki" },
-            { lat: 31.5602, lng: 130.5581, name: "Kagoshima, Kagoshima" },
-            { lat: 26.2124, lng: 127.6809, name: "Naha, Okinawa" }
-        ];
-
-        let usedLocations = [];
+        const JAPAN_BOUNDS = {
+            north: 45.551483,
+            south: 24.396308,
+            east: 145.817458,
+            west: 122.934570
+        };
 
         function initMap() {
             console.log("initMap called");
@@ -273,10 +228,14 @@
                 return;
             }
 
-            const randomLocation = getRandomLocation();
-            
             const streetViewService = new google.maps.StreetViewService();
-            streetViewService.getPanorama({ location: randomLocation, radius: 50, source: 'outdoor' }, (data, status) => {
+            const randomCoords = getRandomCoordinates();
+
+            streetViewService.getPanorama({
+                location: randomCoords,
+                radius: 50000, // Search within 50km
+                source: google.maps.StreetViewSource.OUTDOOR
+            }, (data, status) => {
                 if (status === 'OK') {
                     actualLocation = data.location.latLng;
                     panorama.setPosition(actualLocation);
@@ -285,31 +244,25 @@
                         pitch: 0
                     });
                     console.log('New round location:', actualLocation.lat(), actualLocation.lng());
+                    
+                    // Reset map and markers
+                    map.setCenter({ lat: 37.5, lng: 137 });
+                    map.setZoom(5);
+                    if (guessMarker) guessMarker.setMap(null);
+                    if (actualMarker) actualMarker.setMap(null);
+                    
+                    startTimer();
                 } else {
                     console.error('Street View data not found for this location.');
                     setupNewRound(); // Try again with a new location
                 }
             });
-            
-            // Reset map and markers
-            map.setCenter({ lat: 37.5, lng: 137 });
-            map.setZoom(5);
-            if (guessMarker) guessMarker.setMap(null);
-            if (actualMarker) actualMarker.setMap(null);
-            
-            startTimer();
         }
 
-        function getRandomLocation() {
-            if (usedLocations.length === japaneseLocations.length) {
-                usedLocations = []; // Reset if all locations have been used
-            }
-
-            let availableLocations = japaneseLocations.filter(loc => !usedLocations.includes(loc));
-            const randomLocation = availableLocations[Math.floor(Math.random() * availableLocations.length)];
-            usedLocations.push(randomLocation);
-
-            return randomLocation;
+        function getRandomCoordinates() {
+            const lat = Math.random() * (JAPAN_BOUNDS.north - JAPAN_BOUNDS.south) + JAPAN_BOUNDS.south;
+            const lng = Math.random() * (JAPAN_BOUNDS.east - JAPAN_BOUNDS.west) + JAPAN_BOUNDS.west;
+            return { lat, lng };
         }
 
         function placeGuessMarker(latLng) {
