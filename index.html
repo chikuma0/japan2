@@ -133,6 +133,7 @@
         let timerInterval;
         let mapLoaded = false;
         let isMapView = false;
+        let isHandlingTimeUp = false;
 
         const JAPAN_BOUNDS = {
             north: 45.551483,
@@ -213,6 +214,13 @@
                     setupNewRound(); // Try again with a new location
                 }
             });
+
+            const roundElement = document.getElementById("round");
+            if (roundElement) {
+                roundElement.textContent = `Round: ${currentRound} / ${maxRounds}`;
+            } else {
+                console.error("Round element not found");
+            }
 
             enableSubmitButton();
         }
@@ -457,8 +465,12 @@
         }
 
         function handleTimeUp() {
+            if (isHandlingTimeUp) return; // Prevent multiple calls
+            isHandlingTimeUp = true;
+
             alert("Time's up! Moving to the next round.");
             submitGuess();
+            isHandlingTimeUp = false;
         }
 
         function endGame() {
