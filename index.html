@@ -151,8 +151,10 @@
         <div id="panorama"></div>
         <div id="map"></div>
         <button id="submit-guess" onclick="submitGuess()">Submit Guess</button>
+        <button id="toggle-immersive" onclick="toggleImmersiveMode()">Toggle Immersive Mode</button>
         <div id="score">Total Score: 0</div>
         <div id="round">Round: 1 / 5</div>
+        <div id="result" style="display: none;"></div>
     </div>
 
     <!-- Add this to your HTML -->
@@ -163,8 +165,6 @@
             <button id="toggle-map">Switch to Map</button>
         </div>
     </div>
-
-    <button onclick="testFunction()">Test JavaScript</button>
 
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_PLACEHOLDER&libraries=geometry&callback=initMap"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -635,6 +635,12 @@
                     disableDefaultUI: true,
                     gestureHandling: 'none'
                 });
+
+                // Make sure the mini-map container is visible
+                document.getElementById('mini-map-container').style.display = 'block';
+            } else {
+                // Hide the mini-map container when exiting immersive mode
+                document.getElementById('mini-map-container').style.display = 'none';
             }
         }
 
@@ -699,17 +705,11 @@
         };
 
         function enableSubmitButton() {
-            const submitButton = document.getElementById('submit-guess');
-            if (submitButton) {
-                submitButton.disabled = false;
-            }
+            document.getElementById('submit-guess').disabled = false;
         }
 
         function disableSubmitButton() {
-            const submitButton = document.getElementById('submit-guess');
-            if (submitButton) {
-                submitButton.disabled = true;
-            }
+            document.getElementById('submit-guess').disabled = true;
         }
 
         function checkElements() {
