@@ -176,6 +176,7 @@
         }
 
         function setupNewRound() {
+            console.log(`Setting up round ${currentRound} of ${maxRounds}`);
             if (!mapLoaded) {
                 console.log("Map not loaded yet, waiting...");
                 setTimeout(setupNewRound, 100);
@@ -245,6 +246,7 @@
         }
 
         function submitGuess() {
+            console.log(`Submitting guess for round ${currentRound} of ${maxRounds}`);
             console.log("submitGuess function called");
             try {
                 clearInterval(timerInterval);
