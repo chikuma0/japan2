@@ -183,39 +183,43 @@
 
         function setupNewRound() {
             console.log(`Setting up round ${currentRound} of ${maxRounds}`);
-            if (currentRound > maxRounds) {
-                console.error("Attempting to set up round beyond max rounds");
-                endGame();
-                return;
+            try {
+                if (currentRound > maxRounds) {
+                    console.error("Attempting to set up round beyond max rounds");
+                    endGame();
+                    return;
+                }
+
+                clearMap();
+                updateRoundDisplay();
+                startTimer();
+
+                // Set a new actual location
+                actualLocation = getRandomCoordinates();
+                
+                // Initialize panorama with the new location
+                if (!panorama) {
+                    panorama = new google.maps.StreetViewPanorama(
+                        document.getElementById("panorama"),
+                        {
+                            position: actualLocation,
+                            pov: { heading: 0, pitch: 0 },
+                            zoom: 1,
+                            addressControl: false,
+                            showRoadLabels: false
+                        }
+                    );
+                } else {
+                    panorama.setPosition(actualLocation);
+                }
+
+                console.log("Actual location set:", JSON.stringify(actualLocation));
+
+                // Disable submit button until a guess is made
+                disableSubmitButton();
+            } catch (error) {
+                console.error("Error in setupNewRound:", error);
             }
-
-            clearMap();
-            updateRoundDisplay();
-            startTimer();
-
-            // Set a new actual location
-            actualLocation = getRandomCoordinates();
-            
-            // Initialize panorama with the new location
-            if (!panorama) {
-                panorama = new google.maps.StreetViewPanorama(
-                    document.getElementById("panorama"),
-                    {
-                        position: actualLocation,
-                        pov: { heading: 0, pitch: 0 },
-                        zoom: 1,
-                        addressControl: false,
-                        showRoadLabels: false
-                    }
-                );
-            } else {
-                panorama.setPosition(actualLocation);
-            }
-
-            console.log("Actual location set:", actualLocation);
-
-            // Disable submit button until a guess is made
-            disableSubmitButton();
         }
 
         function getRandomCoordinates() {
