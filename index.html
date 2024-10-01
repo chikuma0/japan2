@@ -273,7 +273,7 @@
             guessMarker = new google.maps.Marker({
                 position: latLng,
                 map: map,
-                icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+                icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
             });
             console.log("Guess marker placed at:", latLng.lat(), latLng.lng());
         }
@@ -287,82 +287,86 @@
         }
 
         function submitGuess() {
-            console.log("submitGuess called");
-            clearInterval(timerInterval);
+            console.log("submitGuess function called");
+            try {
+                clearInterval(timerInterval);
 
-            console.log("guessMarker:", guessMarker);
-            console.log("actualLocation:", actualLocation);
+                console.log("guessMarker:", guessMarker);
+                console.log("actualLocation:", actualLocation);
 
-            let guessLocation, distance, score;
+                let guessLocation, distance, score;
 
-            if (!guessMarker) {
-                console.log("No guess made");
-                guessLocation = null;
-                distance = 2000; // Max distance
-                score = 0;
-            } else {
-                guessLocation = guessMarker.getPosition();
-                console.log("guessLocation:", guessLocation.lat(), guessLocation.lng());
-                
-                if (!actualLocation) {
-                    console.error("actualLocation is not set");
-                    return;
+                if (!guessMarker) {
+                    console.log("No guess made");
+                    guessLocation = null;
+                    distance = 2000; // Max distance
+                    score = 0;
+                } else {
+                    guessLocation = guessMarker.getPosition();
+                    console.log("guessLocation:", guessLocation.lat(), guessLocation.lng());
+                    
+                    if (!actualLocation) {
+                        console.error("actualLocation is not set");
+                        return;
+                    }
+                    
+                    distance = google.maps.geometry.spherical.computeDistanceBetween(guessLocation, actualLocation) / 1000; // Convert to km
+                    score = calculateScore(distance);
                 }
-                
-                distance = google.maps.geometry.spherical.computeDistanceBetween(guessLocation, actualLocation) / 1000; // Convert to km
-                score = calculateScore(distance);
-            }
 
-            console.log("Distance:", distance);
-            console.log("Score for this round:", score);
+                console.log("Distance:", distance);
+                console.log("Score for this round:", score);
 
-            totalScore += score;
-            console.log("Total score:", totalScore);
+                totalScore += score;
+                console.log("Total score:", totalScore);
 
-            // Display result
-            const resultElement = document.getElementById("result");
-            resultElement.innerHTML = `Distance: ${distance.toFixed(2)} km | Points: +${score}`;
-            resultElement.style.display = "block";
+                // Display result
+                const resultElement = document.getElementById("result");
+                resultElement.innerHTML = `Distance: ${distance.toFixed(2)} km | Points: +${score}`;
+                resultElement.style.display = "block";
 
-            document.getElementById("score").textContent = `Total Score: ${totalScore}`;
+                document.getElementById("score").textContent = `Total Score: ${totalScore}`;
 
-            // Show actual location
-            if (actualMarker) actualMarker.setMap(null);
-            actualMarker = new google.maps.Marker({
-                position: actualLocation,
-                map: map,
-                icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
-            });
-
-            // Draw line between guess and actual location if a guess was made
-            if (animationPath) animationPath.setMap(null);
-            if (guessLocation) {
-                animationPath = new google.maps.Polyline({
-                    path: [guessLocation, actualLocation],
-                    geodesic: true,
-                    strokeColor: '#FF0000',
-                    strokeOpacity: 1.0,
-                    strokeWeight: 2,
-                    map: map
+                // Show actual location
+                if (actualMarker) actualMarker.setMap(null);
+                actualMarker = new google.maps.Marker({
+                    position: actualLocation,
+                    map: map,
+                    icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
                 });
 
-                // Fit bounds to show both markers
-                const bounds = new google.maps.LatLngBounds();
-                bounds.extend(guessLocation);
-                bounds.extend(actualLocation);
-                map.fitBounds(bounds);
-            } else {
-                // If no guess was made, just center on the actual location
-                map.setCenter(actualLocation);
-                map.setZoom(12);
-            }
+                // Draw line between guess and actual location if a guess was made
+                if (animationPath) animationPath.setMap(null);
+                if (guessLocation) {
+                    animationPath = new google.maps.Polyline({
+                        path: [guessLocation, actualLocation],
+                        geodesic: true,
+                        strokeColor: '#FF0000',
+                        strokeOpacity: 1.0,
+                        strokeWeight: 2,
+                        map: map
+                    });
 
-            currentRound++;
-            if (currentRound > maxRounds) {
-                endGame();
-            } else {
-                document.getElementById("round").textContent = `Round: ${currentRound} / ${maxRounds}`;
-                setTimeout(setupNewRound, 5000);
+                    // Fit bounds to show both markers
+                    const bounds = new google.maps.LatLngBounds();
+                    bounds.extend(guessLocation);
+                    bounds.extend(actualLocation);
+                    map.fitBounds(bounds);
+                } else {
+                    // If no guess was made, just center on the actual location
+                    map.setCenter(actualLocation);
+                    map.setZoom(12);
+                }
+
+                currentRound++;
+                if (currentRound > maxRounds) {
+                    endGame();
+                } else {
+                    document.getElementById("round").textContent = `Round: ${currentRound} / ${maxRounds}`;
+                    setTimeout(setupNewRound, 5000);
+                }
+            } catch (error) {
+                console.error("Error in submitGuess function:", error);
             }
         }
 
@@ -642,6 +646,16 @@
 
         // Disable the submit button initially
         document.getElementById('submit-guess').disabled = true;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const submitButton = document.getElementById('submit-guess');
+            if (submitButton) {
+                submitButton.addEventListener('click', submitGuess);
+                console.log("Submit button event listener added");
+            } else {
+                console.error("Submit button not found");
+            }
+        });
     </script>
 </body>
 </html>
