@@ -150,7 +150,7 @@
         <div id="timer">2:00</div>
         <div id="panorama"></div>
         <div id="map"></div>
-        <button id="submit-guess" onclick="submitGuess()">Submit Guess</button>
+        <button id="submit-guess" onclick="console.log('Submit button clicked'); submitGuess();">Submit Guess</button>
         <div id="score">Total Score: 0</div>
         <div id="round">Round: 1 / 5</div>
     </div>
@@ -163,6 +163,8 @@
             <button id="toggle-map">Switch to Map</button>
         </div>
     </div>
+
+    <button onclick="testFunction()">Test JavaScript</button>
 
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_PLACEHOLDER&libraries=geometry&callback=initMap"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -287,6 +289,7 @@
         }
 
         function submitGuess() {
+            alert("submitGuess function called");
             console.log("submitGuess function called");
             try {
                 clearInterval(timerInterval);
@@ -656,6 +659,25 @@
                 console.error("Submit button not found");
             }
         });
+
+        function testFunction() {
+            console.log("Test function called");
+            alert("Test function called");
+        }
+
+        window.onload = function() {
+            console.log("Window loaded");
+            var submitButton = document.getElementById('submit-guess');
+            if (submitButton) {
+                console.log("Submit button found");
+                submitButton.onclick = function() {
+                    console.log("Submit button clicked (from event listener)");
+                    submitGuess();
+                };
+            } else {
+                console.error("Submit button not found");
+            }
+        };
     </script>
 </body>
 </html>
