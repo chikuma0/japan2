@@ -103,64 +103,6 @@
         .card-intermediate { background-image: url('images/intermediate-card.png'); }
         .card-beginner { background-image: url('images/beginner-card.png'); }
         .card-novice { background-image: url('images/novice-card.png'); }
-
-        /* Add this to your CSS */
-        #immersive-view {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1000;
-            display: none;
-        }
-
-        #panorama-fullscreen {
-            width: 100%;
-            height: 100%;
-        }
-
-        #mini-map-container {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 200px;
-            height: 200px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 5px;
-            overflow: hidden;
-        }
-
-        #mini-map {
-            width: 100%;
-            height: 100%;
-        }
-
-        #toggle-map {
-            position: absolute;
-            bottom: 5px;
-            left: 5px;
-            z-index: 1001;
-        }
-
-        #exit-immersive {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 1002;
-        }
-
-        #immersive-timer {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1002;
-            font-size: 24px;
-            color: #33ff33;
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
     </style>
 </head>
 <body>
@@ -173,17 +115,6 @@
         <div id="score">Total Score: 0</div>
         <div id="round">Round: 1 / 5</div>
         <div id="result" style="display: none;"></div>
-    </div>
-
-    <!-- Add this to your HTML -->
-    <div id="immersive-view">
-        <div id="panorama-fullscreen"></div>
-        <div id="mini-map-container">
-            <div id="mini-map"></div>
-            <button id="toggle-map">Switch to Map</button>
-        </div>
-        <button id="exit-immersive" onclick="toggleImmersiveMode()">Exit Immersive Mode</button>
-        <div id="immersive-timer"></div>
     </div>
 
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCQsM6IW_drrcpvIUBB545G9j4rUGVvIE&libraries=geometry&callback=initMap"></script>
@@ -199,7 +130,6 @@
         let currentRound = 1;
         const maxRounds = 5; // or whatever number of rounds you want
         let timerInterval;
-        let isImmersiveMode = false;
         let mapLoaded = false;
 
         const JAPAN_BOUNDS = {
@@ -346,11 +276,6 @@
                 totalScore += score;
                 console.log("Total score:", totalScore);
 
-                // Exit immersive mode if active
-                if (isImmersiveMode) {
-                    toggleImmersiveMode();
-                }
-
                 // Display result
                 const resultElement = document.getElementById("result");
                 if (resultElement) {
@@ -374,6 +299,14 @@
                     map: map,
                     icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
                 });
+
+                // Animate arrow to actual location
+                if (guessLocation) {
+                    animateArrowSlower(guessLocation, actualLocation, () => {
+                        // Callback after animation completes
+                        console.log("Arrow animation completed");
+                    });
+                }
 
                 // Draw line between guess and actual location
                 if (animationPath) animationPath.setMap(null);
@@ -446,17 +379,21 @@
             animationPath = new google.maps.Polyline({
                 path: [start, start],
                 icons: [{
-                    icon: createArrowSymbol(),
+                    icon: {
+                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                        scale: 5,
+                        strokeColor: '#FFD700'
+                    },
                     offset: '100%'
                 }],
                 map: map,
-                strokeColor: '#ff0',
+                strokeColor: '#FFD700',
                 strokeOpacity: 0.8,
                 strokeWeight: 2
             });
 
             let step = 0;
-            const numSteps = 100; // Increase number of steps for smoother animation
+            const numSteps = 200; // Increase for slower animation
             const animationStep = window.setInterval(() => {
                 step++;
                 if (step > numSteps) {
@@ -466,7 +403,7 @@
                 }
                 const are_we_there_yet = google.maps.geometry.spherical.interpolate(start, end, step / numSteps);
                 animationPath.setPath([start, are_we_there_yet]);
-            }, 20); // Increase interval to slow down animation (was 10)
+            }, 30); // Increase for slower animation
         }
 
         function calculateScore(distance) {
@@ -496,14 +433,12 @@
         function startTimer() {
             let timeLeft = 120; // 2 minutes in seconds
             const timerElement = document.getElementById("timer");
-            const immersiveTimerElement = document.getElementById("immersive-timer");
 
             function updateTimer() {
                 const minutes = Math.floor(timeLeft / 60);
                 const seconds = timeLeft % 60;
                 const timerText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
                 timerElement.textContent = timerText;
-                immersiveTimerElement.textContent = timerText;
 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
@@ -595,128 +530,20 @@
         }
 
         function shareResult() {
-            const resultContainer = document.getElementById('result-container');
-            
-            html2canvas(resultContainer, {
-                backgroundColor: null,
-                scale: 2, // Increase resolution
-            }).then(canvas => {
-                canvas.toBlob(blob => {
-                    const filesArray = [
-                        new File(
-                            [blob],
-                            'japan-tsu-result.png',
-                            {
-                                type: 'image/png',
-                                lastModified: new Date().getTime()
-                            }
-                        )
-                    ];
-                    
-                    const shareData = {
-                        files: filesArray,
-                        title: 'My Japan-tsū Result',
-                        text: `I scored ${totalScore} points in Japan-tsū! Can you beat my score? Play at japan2.xyz`,
-                        url: 'https://japan2.xyz'
-                    };
-                    
-                    if (navigator.canShare && navigator.canShare(shareData)) {
-                        navigator.share(shareData)
-                            .then(() => console.log('Share was successful.'))
-                            .catch((error) => console.log('Sharing failed', error));
-                    } else {
-                        console.log(`Your system doesn't support sharing files.`);
-                        // Fallback for systems that don't support file sharing
-                        const shareData = {
-                            title: 'My Japan-tsū Result',
-                            text: `I scored ${totalScore} points in Japan-tsū! Can you beat my score? Play at japan2.xyz`,
-                            url: 'https://japan2.xyz'
-                        };
-                        navigator.share(shareData);
-                    }
-                });
-            });
-        }
+            const shareText = `I scored ${totalScore} points in Japan-tsū! Can you beat my score? Play at japan2.xyz`;
+            const shareUrl = 'https://japan2.xyz';
 
-        function toggleImmersiveMode() {
-            isImmersiveMode = !isImmersiveMode;
-            const immersiveView = document.getElementById('immersive-view');
-            const gameContainer = document.getElementById('game-container');
-            
-            if (isImmersiveMode) {
-                immersiveView.style.display = 'block';
-                gameContainer.style.display = 'none';
-                
-                // Move panorama to fullscreen view
-                const panoramaFullscreen = new google.maps.StreetViewPanorama(
-                    document.getElementById("panorama-fullscreen"),
-                    {
-                        position: panorama.getPosition(),
-                        pov: panorama.getPov(),
-                        zoom: panorama.getZoom(),
-                        addressControl: false,
-                        showRoadLabels: false
-                    }
-                );
-                
-                // Create mini-map
-                const miniMap = new google.maps.Map(document.getElementById("mini-map"), {
-                    center: map.getCenter(),
-                    zoom: map.getZoom(),
-                    gestureHandling: 'greedy'
-                });
-
-                // Add click listener to mini-map
-                miniMap.addListener("click", (e) => {
-                    placeGuessMarker(e.latLng, miniMap);
-                });
-
-                // Make sure the mini-map container is visible
-                document.getElementById('mini-map-container').style.display = 'block';
-
-                // Update timer in immersive mode
-                updateImmersiveTimer();
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My Japan-tsū Result',
+                    text: shareText,
+                    url: shareUrl
+                }).then(() => console.log('Shared successfully'))
+                .catch((error) => console.log('Error sharing:', error));
             } else {
-                immersiveView.style.display = 'none';
-                gameContainer.style.display = 'block';
-                
-                // Transfer the guess marker from mini-map to main map if it exists
-                if (guessMarker) {
-                    guessMarker.setMap(map);
-                }
+                // Fallback for browsers that don't support Web Share API
+                prompt('Copy this text to share your result:', `${shareText} ${shareUrl}`);
             }
-        }
-
-        function updateImmersiveTimer() {
-            const immersiveTimerElement = document.getElementById("immersive-timer");
-            immersiveTimerElement.textContent = document.getElementById("timer").textContent;
-        }
-
-        document.getElementById('toggle-map').addEventListener('click', () => {
-            // Switch between panorama and map view
-            const panoramaFullscreen = document.getElementById('panorama-fullscreen');
-            const miniMap = document.getElementById('mini-map-container');
-            
-            if (panoramaFullscreen.style.display !== 'none') {
-                panoramaFullscreen.style.display = 'none';
-                miniMap.style.width = '100%';
-                miniMap.style.height = '100%';
-            } else {
-                panoramaFullscreen.style.display = 'block';
-                miniMap.style.width = '200px';
-                miniMap.style.height = '200px';
-            }
-        });
-
-        function calculateScore(distance) {
-            if (isNaN(distance) || distance === Infinity) {
-                console.error('Invalid distance:', distance);
-                return 0;
-            }
-            const maxDistance = 2000; // km
-            const maxScore = 5000;
-            let score = Math.max(0, Math.round(maxScore * (1 - distance / maxDistance)));
-            return score;
         }
 
         // Disable the submit button initially
