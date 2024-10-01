@@ -187,7 +187,12 @@
             clearMap();
             updateRoundDisplay();
             startTimer();
-            // ... rest of setupNewRound function (selecting new location, etc.)
+
+            // Set a new actual location
+            actualLocation = getRandomCoordinates();
+            panorama.setPosition(actualLocation);
+
+            console.log("Actual location set:", actualLocation);
         }
 
         function getRandomCoordinates() {
@@ -225,8 +230,8 @@
             let guessLocation = guessMarker ? guessMarker.getPosition() : null;
             let distance, score;
 
-            if (!guessLocation) {
-                console.log("No guess made");
+            if (!guessLocation || !actualLocation) {
+                console.log("No guess made or actual location not set");
                 distance = 2000; // Max distance
                 score = 0;
             } else {
@@ -429,7 +434,7 @@
         }
 
         function resetGameGlobal() {
-            console.log("Resetting game globally");
+            console.log("resetGameGlobal called");
             totalScore = 0;
             currentRound = 1;
             clearMap();
