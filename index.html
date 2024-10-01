@@ -255,6 +255,7 @@
 
         function submitGuess() {
             console.log(`Submitting guess for round ${currentRound} of ${maxRounds}`);
+            console.log(`Current total score: ${totalScore}`);
             console.log("submitGuess function called");
             try {
                 clearInterval(timerInterval);
@@ -474,6 +475,7 @@
         }
 
         function endGame() {
+            console.log(`Ending game. Final score: ${totalScore}`);
             clearInterval(timerInterval);
             const maxPossibleScore = 5000 * maxRounds;
             const scorePercentage = (totalScore / maxPossibleScore) * 100;
@@ -541,12 +543,13 @@
         }
 
         function resetGameGlobal() {
+            console.log("Resetting game globally");
             resetGame();
             setupNewRound();
         }
 
         function shareResult() {
-            const shareText = `I scored ${totalScore} points in Japan-tsū! Can you beat my score? Play at japan2.xyz`;
+            const shareText = `I scored ${totalScore} points in Japan-tsū! Can you beat my score?`;
             const shareUrl = 'https://japan2.xyz';
 
             if (navigator.share) {
@@ -558,7 +561,14 @@
                 .catch((error) => console.log('Error sharing:', error));
             } else {
                 // Fallback for browsers that don't support Web Share API
-                prompt('Copy this text to share your result:', `${shareText} ${shareUrl}`);
+                const fallbackText = `${shareText} Play at ${shareUrl}`;
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(fallbackText)
+                        .then(() => alert('Result copied to clipboard!'))
+                        .catch(() => prompt('Copy this text to share your result:', fallbackText));
+                } else {
+                    prompt('Copy this text to share your result:', fallbackText);
+                }
             }
         }
 
