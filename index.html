@@ -150,7 +150,7 @@
         <div id="timer">2:00</div>
         <div id="panorama"></div>
         <div id="map"></div>
-        <button onclick="submitGuess()">Submit Guess</button>
+        <button id="submit-guess" onclick="submitGuess()">Submit Guess</button>
         <div id="score">Total Score: 0</div>
         <div id="round">Round: 1 / 5</div>
     </div>
@@ -164,7 +164,7 @@
         </div>
     </div>
 
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCQsM6IW_drrcpvIUBB545G9j4rUGVvIE&libraries=geometry&callback=initMap"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=geometry&callback=initMap"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
         let panorama;
@@ -178,6 +178,7 @@
         const maxRounds = 5;
         let timerInterval;
         let isImmersiveMode = false;
+        let mapLoaded = false;
 
         // Expand this list with more diverse locations across Japan
         const japaneseLocations = [
@@ -249,13 +250,23 @@
             });
 
             map.addListener("click", (e) => {
-                placeGuessMarker(e.latLng);
+                try {
+                    placeGuessMarker(e.latLng);
+                } catch (error) {
+                    console.error("Error placing guess marker:", error);
+                }
             });
 
             setupNewRound();
         }
 
         function setupNewRound() {
+            if (!mapLoaded) {
+                console.log("Map not loaded yet, waiting...");
+                setTimeout(setupNewRound, 100);
+                return;
+            }
+
             const randomLocation = getRandomLocation();
             
             const streetViewService = new google.maps.StreetViewService();
@@ -302,8 +313,9 @@
             guessMarker = new google.maps.Marker({
                 position: latLng,
                 map: map,
-                icon: createPixelIcon('blue')
+                icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
             });
+            console.log("Guess marker placed at:", latLng.lat(), latLng.lng());
         }
 
         function createPixelIcon(color) {
@@ -315,8 +327,14 @@
         }
 
         function submitGuess() {
+            console.log("submitGuess called");
             if (!guessMarker) {
                 alert("Please place a guess on the map first!");
+                return;
+            }
+
+            if (!actualLocation) {
+                console.error("Actual location not set");
                 return;
             }
 
@@ -377,6 +395,8 @@
             console.log('Actual location:', actualLocation.lat(), actualLocation.lng());
             console.log('Distance:', distance);
             console.log('Score:', score);
+
+            console.log("Guess submitted successfully");
         }
 
         function showActualLocation(actualLatLng) {
@@ -616,10 +636,18 @@
             });
 
             map.addListener("click", (e) => {
-                placeGuessMarker(e.latLng);
+                try {
+                    placeGuessMarker(e.latLng);
+                } catch (error) {
+                    console.error("Error placing guess marker:", error);
+                }
             });
 
             setupNewRound();
+
+            // At the end of initMap:
+            mapLoaded = true;
+            document.getElementById('submit-guess').disabled = false;
         }
 
         function toggleImmersiveMode() {
@@ -676,6 +704,9 @@
             let score = Math.max(0, Math.round(maxScore * (1 - distance / maxDistance)));
             return score;
         }
+
+        // Disable the submit button initially
+        document.getElementById('submit-guess').disabled = true;
     </script>
 </body>
 </html>
