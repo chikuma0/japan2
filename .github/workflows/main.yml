@@ -18,15 +18,10 @@ jobs:
     - name: Install dependencies
       run: npm install dotenv
 
-    - name: Build
-      run: node build.js
+    - name: Run predeploy script
+      run: node predeploy.js
       env:
         GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
-
-    - name: Check built index.html
-      run: |
-        echo "Checking dist/index.html content:"
-        cat dist/index.html | grep -o 'key=[^&]*'
 
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
