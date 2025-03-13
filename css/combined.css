@@ -718,13 +718,8 @@ body {
   position: relative;
 }
 
-/* New Three-Column Layout */
-.game-layout {
-  display: grid;
-  grid-template-columns: 1fr 2.5fr 1fr;
-  gap: 15px;
-  margin-bottom: 15px;
-}
+/* Game Layout */
+/* The responsive layout styles are defined below */
 
 /* Column Styles */
 .game-column {
