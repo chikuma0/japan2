@@ -1114,32 +1114,44 @@ body {
   margin-bottom: 8px;
 }
 
-/* Desktop and laptop layout (three columns) */
+/* Desktop and laptop layout (three columns) - Higher specificity */
 @media (min-width: 768px) {
-  .game-layout {
-    display: grid;
+  .game-container .game-layout {
+    display: grid !important;
     grid-template-columns:
       var(--left-column-width)
       var(--center-column-width)
-      var(--right-column-width);
+      var(--right-column-width) !important;
     gap: var(--spacing-base);
+  }
+  
+  /* Ensure columns are properly displayed */
+  .game-container .game-column {
+    display: flex;
+    flex-direction: column;
   }
 }
 
 /* Laptop-specific adjustments */
 @media (min-width: 768px) and (max-width: 1439px) {
-  .game-layout {
+  .game-container .game-layout {
     /* Keep the three-column layout but with slightly adjusted proportions */
     grid-template-columns:
       var(--left-column-width)
       var(--center-column-width)
-      var(--right-column-width);
+      var(--right-column-width) !important;
   }
 }
 
 /* Large desktop layout */
 @media (min-width: 1440px) {
-  /* No changes needed as the base styles are already applied from the min-width: 768px breakpoint */
+  /* Explicitly set the grid columns for large screens */
+  .game-container .game-layout {
+    grid-template-columns:
+      var(--left-column-width)
+      var(--center-column-width)
+      var(--right-column-width) !important;
+  }
 }
 
 /* Mobile devices (portrait) */
@@ -1189,18 +1201,6 @@ body {
     min-height: 100px;
     width: 100%;
   }
-}
-
-/* Map Container - Always Visible */
-.map-container {
-  width: 100%;
-  height: var(--map-height);
-  border-radius: calc(15px * var(--scale-factor));
-  overflow: hidden;
-  border: 3px solid var(--color-secondary);
-  position: relative;
-  margin-bottom: var(--spacing-base);
-  display: block;
 }
 
 /* Adjust map height for different screen sizes */
