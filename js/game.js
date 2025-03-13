@@ -135,6 +135,14 @@ function continueSetupRound() {
             
             // Reset retry count for next round
             retryCount = 0;
+            
+            // If we're moving to the next round, update the round number now that the location is loaded
+            if (nextRoundPending) {
+                currentRound++;
+                console.log(`Now showing round ${currentRound} of ${maxRounds}`);
+                updateRound(currentRound, maxRounds);
+                nextRoundPending = false;
+            }
         });
     }).catch(error => {
         console.error('Error getting random location:', error);
@@ -400,6 +408,9 @@ let isSubmitting = false;
 /**
  * Submit the current guess and calculate score
  */
+// Variable to track if we're moving to the next round
+let nextRoundPending = false;
+
 function submitGuess() {
     try {
         // Prevent multiple submissions for the same round
@@ -497,10 +508,9 @@ function submitGuess() {
                 endGame(totalScore, maxRounds, usedLocations);
             }, 7000); // Same delay as for showing location info
         } else {
-            // Move to next round
-            currentRound++;
-            console.log(`Round completed. Moving to round ${currentRound} of ${maxRounds}`);
-            updateRound(currentRound, maxRounds);
+            // Mark that we're moving to the next round, but don't increment yet
+            nextRoundPending = true;
+            console.log(`Round ${currentRound} completed. Preparing for next round.`);
             
             // Reset the submission flag after a delay
             setTimeout(() => {
