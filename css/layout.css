@@ -315,81 +315,64 @@
   margin-top: 15px;
 }
 
-/* Responsive Layout */
-@media (max-width: 1400px) {
-  .game-layout {
-    grid-template-columns: 1fr 2fr 1fr;
-    gap: 10px;
-  }
+/* Force Three-Column Layout Regardless of Screen Size */
+.game-layout {
+  display: grid !important;
+  grid-template-columns: 1fr 2.5fr 1fr !important;
+  gap: 15px !important;
+  margin-bottom: 15px !important;
 }
 
-@media (max-width: 1100px) {
-  .game-layout {
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .game-column-right {
-    grid-column: span 2;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-  }
+/* Force Column Styles */
+.game-column {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 15px !important;
 }
 
-@media (max-width: 768px) {
-  /* Switch to vertical layout for mobile */
-  .game-layout {
-    grid-template-columns: 1fr;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  /* Reorder columns for mobile */
-  .game-column-left {
-    order: 1;
-  }
-  
-  .game-column-center {
-    order: 2;
-  }
-  
-  .game-column-right {
-    order: 3;
-    grid-column: span 1;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  /* Move result display after map for mobile */
-  #result {
-    order: 4;
+/* Force Game Controls to be Horizontal */
+.game-controls {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  margin-bottom: 15px !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.game-controls button {
+  flex: 1 !important;
+  min-width: 150px !important;
+  padding: 12px 20px !important;
+  font-size: 1.1rem !important;
+  width: auto !important;
+}
+
+/* Force Timer to be in Center Column */
+.timer-display {
+  margin-bottom: 8px !important;
+}
+
+/* Responsive adjustments for very small screens only */
+@media (max-width: 480px) {
+  .game-container {
+    margin: 10px;
+    padding: 15px;
   }
   
   .panorama-container, .map-container {
-    height: 300px;
-  }
-  
-  .game-controls {
-    flex-direction: column;
-  }
-  
-  .game-controls button {
-    width: 100%;
-  }
-  
-  .result-card {
-    width: 250px;
     height: 250px;
   }
   
-  .game-header {
-    flex-direction: column;
-    gap: 10px;
-    text-align: center;
+  .result-card {
+    width: 200px;
+    height: 200px;
   }
   
-  .game-logo {
-    justify-content: center;
+  .mini-map-container {
+    width: 150px;
+    height: 150px;
   }
 }
 
