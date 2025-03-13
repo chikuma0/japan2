@@ -4,7 +4,7 @@
 
 // Import all modules
 // Note: We're using dynamic imports to avoid CORS issues when loading directly from filesystem
-let mapModule, panoramaModule, gameModule, uiModule, sharingModule;
+let mapModule, panoramaModule, gameModule, uiModule, sharingModule, locationsModule;
 
 // Global variables that need to be accessible from HTML
 window.map = null;
@@ -27,12 +27,24 @@ window.initMap = async function() {
         gameModule = await import('./game.js');
         uiModule = await import('./ui.js');
         sharingModule = await import('./sharing.js');
+        locationsModule = await import('./locations-db.js');
         
         // Expose functions to global scope
         window.submitGuess = gameModule.submitGuess;
         window.toggleImmersiveMode = uiModule.toggleImmersiveMode;
         window.shareResult = sharingModule.shareResult;
         window.resetGameGlobal = gameModule.resetGame;
+        
+        // Expose game settings functions
+        window.setGameDifficulty = gameModule.setGameDifficulty;
+        window.setGameRegion = gameModule.setGameRegion;
+        window.setGameCategory = gameModule.setGameCategory;
+        window.resetGameSettings = gameModule.resetGameSettings;
+        
+        // Expose constants for game settings
+        window.DIFFICULTY_LEVELS = gameModule.DIFFICULTY_LEVELS;
+        window.LOCATION_CATEGORIES = gameModule.LOCATION_CATEGORIES;
+        window.JAPAN_REGIONS = gameModule.JAPAN_REGIONS;
         
         // Check if Google Maps API is loaded
         if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
@@ -106,6 +118,21 @@ function setupEventListeners() {
         console.error("Submit button not found");
     }
     
+    // Add event listener to toggle immersive mode button
+    const toggleImmersiveButton = document.getElementById('toggle-immersive-btn');
+    if (toggleImmersiveButton) {
+        toggleImmersiveButton.addEventListener('click', function() {
+            if (window.toggleImmersiveMode) {
+                window.toggleImmersiveMode();
+            } else {
+                console.error("toggleImmersiveMode function not available yet");
+            }
+        });
+        console.log("Toggle immersive mode button event listener added");
+    } else {
+        console.error("Toggle immersive mode button not found");
+    }
+    
     // Add event listener to exit immersive button
     const exitImmersiveButton = document.getElementById('exit-immersive');
     if (exitImmersiveButton) {
@@ -131,21 +158,8 @@ window.onload = function() {
         uiModule.checkElements();
     }
     
-    // Add event listener to submit button again (redundant but ensures it's added)
-    const submitButton = document.getElementById('submit-guess');
-    if (submitButton) {
-        console.log("Submit button found");
-        submitButton.onclick = function() {
-            console.log("Submit button clicked (from event listener)");
-            if (window.submitGuess) {
-                window.submitGuess();
-            } else {
-                console.error("submitGuess function not available yet");
-            }
-        };
-    } else {
-        console.error("Submit button not found");
-    }
+    // We no longer add a redundant event listener here
+    // This was causing the double submission issue
 };
 
 // Log that the index.js file has loaded

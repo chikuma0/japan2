@@ -4,187 +4,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Japan-tsū</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-        body {
-            font-family: 'Press Start 2P', cursive;
-            background-color: #0a0a0a;
-            color: #33ff33;
-            text-align: center;
-            padding: 20px;
-            line-height: 1.6;
-        }
-
-        h1 {
-            font-size: 24px;
-            color: #33ff33;
-            text-shadow: 2px 2px 0px #006400;
-            margin-bottom: 20px;
-        }
-
-        #game-container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: #1a1a1a;
-            border: 4px solid #33ff33;
-            padding: 20px;
-            box-shadow: 0 0 0 4px #006400, 0 0 10px rgba(51, 255, 51, 0.5);
-        }
-
-        #panorama, #map {
-            height: 400px;
-            width: 100%;
-            margin-bottom: 20px;
-            border: 2px solid #33ff33;
-        }
-
-        #timer {
-            font-size: 24px;
-            color: #33ff33;
-            margin-bottom: 10px;
-        }
-
-        button {
-            font-family: 'Press Start 2P', cursive;
-            background-color: #006400;
-            color: #33ff33;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-bottom: 20px;
-            image-rendering: pixelated;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #008000;
-        }
-
-        #score, #round {
-            background-color: #0a0a0a;
-            color: #33ff33;
-            border: 2px solid #006400;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-
-        .pulse {
-            animation: pulse 0.5s ease-in-out 3;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        .result-card {
-            width: 90%;
-            max-width: 300px;
-            height: auto;
-            aspect-ratio: 1 / 1;
-            margin: 20px auto;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-
-        @media (max-width: 600px) {
-            .result-card {
-                width: 80%;
-                max-width: 250px;
-            }
-        }
-
-        .card-master { background-image: url('images/master-card.png'); }
-        .card-expert { background-image: url('images/expert-card.png'); }
-        .card-intermediate { background-image: url('images/intermediate-card.png'); }
-        .card-beginner { background-image: url('images/beginner-card.png'); }
-        .card-novice { background-image: url('images/novice-card.png'); }
-
-        /* Add this to your CSS */
-        #immersive-view {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1000;
-            display: none;
-        }
-
-        #panorama-fullscreen {
-            width: 100%;
-            height: 100%;
-        }
-
-        #mini-map-container {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 200px;
-            height: 200px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 5px;
-            overflow: hidden;
-        }
-
-        #mini-map {
-            width: 100%;
-            height: 100%;
-        }
-
-        #toggle-map {
-            position: absolute;
-            bottom: 5px;
-            left: 5px;
-            z-index: 1001;
-        }
-
-        #exit-immersive {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 1002;
-        }
-
-        #immersive-timer {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1002;
-            font-size: 24px;
-            color: #33ff33;
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
-    </style>
+    <!-- Replace inline styles with our new CSS structure -->
+    <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-    <div id="game-container">
-        <h1>Japan-tsū</h1>
-        <div id="timer">2:00</div>
-        <div id="panorama"></div>
-        <div id="map"></div>
-        <button id="submit-guess">Submit Guess</button>
-        <div id="score">Total Score: 0</div>
-        <div id="round">Round: 1 / 5</div>
+    <!-- Main Game Container -->
+    <div class="game-container" id="game-container">
+        <!-- Game Header -->
+        <div class="game-header">
+            <div class="game-logo">
+                <h1>Japan-tsū</h1>
+                <div class="mascot mascot-sm">
+                    <div class="japan-mascot">
+                        <div class="mascot-face">
+                            <div class="mascot-eyes">
+                                <div class="mascot-eye"></div>
+                                <div class="mascot-eye"></div>
+                            </div>
+                            <div class="mascot-blush"></div>
+                            <div class="mascot-mouth"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="game-settings">
+                <button class="btn btn-sm btn-outline" id="settings-button">Settings</button>
+            </div>
+        </div>
+
+        <!-- Timer Display -->
+        <div class="timer-display" id="timer">2:00</div>
+
+        <!-- Panorama Viewer -->
+        <div class="panorama-container" id="panorama"></div>
+
+        <!-- Game Info Grid -->
+        <div class="game-info-grid">
+            <!-- Map Container -->
+            <div class="map-container" id="map"></div>
+
+            <!-- Game Info -->
+            <div class="game-info">
+                <div class="score-display" id="score">Total Score: 0</div>
+                <div class="round-display" id="round">Round: 1 / 5</div>
+                <div class="progress" id="timer-progress">
+                    <div class="progress-bar" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Controls -->
+        <div class="game-controls">
+            <button class="btn btn-primary" id="submit-guess">Submit Guess</button>
+            <button class="btn btn-secondary" id="toggle-immersive-btn">Immersive Mode</button>
+        </div>
+
+        <!-- Result Display -->
         <div id="result" style="display: none;"></div>
+
+        <!-- Location Info -->
+        <div class="location-info" id="location-info" style="display: none;"></div>
+
+        <!-- Ad Space -->
+        <div class="ad-container">
+            <!-- Ad content will go here -->
+        </div>
     </div>
 
-    <!-- Add this to your HTML -->
-    <div id="immersive-view">
-        <div id="panorama-fullscreen"></div>
-        <div id="mini-map-container">
-            <div id="mini-map"></div>
-            <button id="toggle-map">Switch to Map</button>
+    <!-- Immersive View -->
+    <div class="immersive-view" id="immersive-view">
+        <div class="panorama-fullscreen" id="panorama-fullscreen"></div>
+        <div class="mini-map-container" id="mini-map-container">
+            <div class="mini-map" id="mini-map"></div>
+            <button class="btn btn-sm btn-primary" id="toggle-map">Switch to Map</button>
         </div>
-        <button id="exit-immersive">Exit Immersive Mode</button>
-        <div id="immersive-timer"></div>
+        <button class="btn btn-accent" id="exit-immersive">Exit Immersive Mode</button>
+        <div class="immersive-timer" id="immersive-timer"></div>
     </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading-indicator" id="loading-indicator" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Finding location...</p>
+    </div>
+
+    <!-- Confetti Container for Celebrations -->
+    <div class="confetti-container" id="confetti-container"></div>
 
     <!-- External Libraries (non-Maps) -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -198,10 +103,27 @@
         window.addEventListener('load', function() {
             // Create a script element for Google Maps API
             const script = document.createElement('script');
-            script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyB7zM7AafXQr2SL2ML96ocKzEjRqpopUFI&libraries=geometry&callback=initMap';
+            
+            // Try to load the API with a key first, but fall back to no key if there's an error
+            const apiKey = 'AIzaSyB7zM7AafXQr2SL2ML96ocKzEjRqpopUFI';
+            let apiUrl = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry&callback=initMap`;
+            
+            // Add error handling for API key issues
+            script.onerror = function() {
+                console.log("Error loading Google Maps API with key, trying without key...");
+                const fallbackScript = document.createElement('script');
+                fallbackScript.src = 'https://maps.googleapis.com/maps/api/js?libraries=geometry&callback=initMap';
+                fallbackScript.async = true;
+                fallbackScript.defer = true;
+                document.body.appendChild(fallbackScript);
+            };
+            
+            script.src = apiUrl;
             script.async = true;
             script.defer = true;
             document.body.appendChild(script);
+            
+            console.log('Loading Google Maps API:', apiUrl);
         });
     </script>
 </body>

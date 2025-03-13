@@ -1,0 +1,407 @@
+/* 
+ * theme.css - Kiddy Land-inspired theme styles
+ * Part of Japan-tsū frontend restoration
+ */
+
+/* Body Theme Overrides */
+body {
+  background-color: var(--color-background);
+  background-image:
+    radial-gradient(var(--color-primary-light) 2px, transparent 2px),
+    radial-gradient(var(--color-secondary-light) 2px, transparent 2px),
+    linear-gradient(var(--color-accent) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-accent) 1px, transparent 1px);
+  background-size: 40px 40px, 40px 40px, 40px 40px, 40px 40px;
+  background-position: 0 0, 20px 20px, 0 0, 0 0;
+  background-repeat: repeat;
+  background-attachment: fixed;
+  opacity: 0.95;
+}
+
+/* Game Container Theme */
+.game-container {
+  background-color: var(--color-background);
+  border: 5px solid var(--color-primary);
+  border-style: dashed;
+  box-shadow: 
+    0 10px 30px var(--shadow-color),
+    0 0 0 10px var(--color-secondary-light);
+  position: relative;
+}
+
+.game-container::before {
+  content: '';
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  right: -15px;
+  bottom: -15px;
+  border: 3px dotted var(--color-accent);
+  border-radius: 25px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Header Theme */
+.game-header {
+  position: relative;
+}
+
+.game-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background-image: linear-gradient(90deg, 
+    var(--color-primary) 0%, 
+    var(--color-primary) 50%, 
+    transparent 50%, 
+    transparent 100%);
+  background-size: 16px 6px;
+}
+
+.game-logo h1 {
+  font-family: 'Varela Round', sans-serif;
+  color: var(--color-text-heading);
+  text-shadow: 
+    3px 3px 0 var(--color-primary-light),
+    -1px -1px 0 var(--color-primary-light),
+    1px -1px 0 var(--color-primary-light),
+    -1px 1px 0 var(--color-primary-light),
+    1px 1px 0 var(--color-primary-light);
+  letter-spacing: 1px;
+}
+
+/* Button Theme Overrides */
+.btn {
+  border-radius: 50px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border: 3px solid;
+}
+
+.btn-primary {
+  border-color: var(--color-primary-dark);
+  box-shadow: 
+    0 5px 0 var(--color-primary-dark),
+    0 5px 10px var(--shadow-color);
+}
+
+.btn-primary:active {
+  box-shadow: 
+    0 2px 0 var(--color-primary-dark),
+    0 2px 5px var(--shadow-color);
+}
+
+.btn-secondary {
+  border-color: var(--color-secondary-dark);
+  box-shadow: 
+    0 5px 0 var(--color-secondary-dark),
+    0 5px 10px var(--shadow-color);
+}
+
+.btn-secondary:active {
+  box-shadow: 
+    0 2px 0 var(--color-secondary-dark),
+    0 2px 5px var(--shadow-color);
+}
+
+.btn-accent {
+  border-color: var(--color-accent-dark);
+  box-shadow: 
+    0 5px 0 var(--color-accent-dark),
+    0 5px 10px var(--shadow-color);
+}
+
+.btn-accent:active {
+  box-shadow: 
+    0 2px 0 var(--color-accent-dark),
+    0 2px 5px var(--shadow-color);
+}
+
+/* Map Container Theme */
+.map-container {
+  border: 5px solid var(--color-secondary);
+  border-radius: 20px;
+  box-shadow: 
+    inset 0 0 20px var(--shadow-color),
+    0 5px 15px var(--shadow-color);
+  overflow: hidden;
+}
+
+/* Panorama Container Theme */
+.panorama-container {
+  border: 5px solid var(--color-primary);
+  border-radius: 20px;
+  box-shadow: 
+    inset 0 0 20px var(--shadow-color),
+    0 5px 15px var(--shadow-color);
+  overflow: hidden;
+}
+
+/* Game Info Theme */
+.game-info {
+  background-color: var(--color-background-alt);
+  border: 3px dashed var(--color-primary);
+  border-radius: 20px;
+  box-shadow: 0 5px 15px var(--shadow-color);
+}
+
+/* Timer Display Theme */
+.timer-display {
+  font-family: 'Varela Round', sans-serif;
+  color: var(--color-text-heading);
+  background-color: var(--color-background-alt);
+  padding: 10px 15px;
+  border-radius: 50px;
+  border: 3px solid var(--color-primary);
+  box-shadow: 0 4px 0 var(--color-primary-dark);
+  display: inline-block;
+}
+
+/* Score Display Theme */
+.score-display {
+  font-family: 'Varela Round', sans-serif;
+  color: var(--color-text-heading);
+  background-color: var(--color-background-alt);
+  padding: 10px 15px;
+  border-radius: 50px;
+  border: 3px solid var(--color-secondary);
+  box-shadow: 0 4px 0 var(--color-secondary-dark);
+  display: inline-block;
+}
+
+/* Round Display Theme */
+.round-display {
+  font-family: 'Varela Round', sans-serif;
+  color: var(--color-text-heading);
+  background-color: var(--color-background-alt);
+  padding: 10px 15px;
+  border-radius: 50px;
+  border: 3px solid var(--color-accent);
+  box-shadow: 0 4px 0 var(--color-accent-dark);
+  display: inline-block;
+}
+
+/* Result Card Theme */
+.result-card {
+  border-width: 5px;
+  border-style: solid;
+  border-radius: 20px;
+  box-shadow: 
+    0 10px 30px var(--shadow-color),
+    0 0 0 10px rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.result-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.3) 0%, 
+    rgba(255, 255, 255, 0) 50%, 
+    rgba(255, 255, 255, 0.3) 100%);
+  pointer-events: none;
+}
+
+/* Location Info Theme */
+.location-info {
+  background-color: var(--color-background-alt);
+  border: 3px dashed var(--color-secondary);
+  border-radius: 20px;
+  box-shadow: 0 5px 15px var(--shadow-color);
+}
+
+.location-info h3 {
+  font-family: 'Varela Round', sans-serif;
+  color: var(--color-text-heading);
+  border-bottom: 3px dotted var(--color-primary);
+}
+
+/* Visited Locations Theme */
+.visited-locations {
+  background-color: var(--color-background-alt);
+  border: 3px dashed var(--color-primary);
+  border-radius: 20px;
+  padding: 15px;
+  box-shadow: 0 5px 15px var(--shadow-color);
+}
+
+.visited-locations h3 {
+  font-family: 'Varela Round', sans-serif;
+  color: var(--color-text-heading);
+  border-bottom: 3px dotted var(--color-primary);
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+}
+
+.visited-locations li {
+  border-bottom: 2px dotted var(--color-primary-light);
+  padding: 8px 0;
+}
+
+/* Loading Indicator Theme */
+.loading-indicator {
+  background-color: var(--color-background);
+  border: 5px dashed var(--color-primary);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px var(--shadow-color);
+  padding: 20px;
+}
+
+.loading-spinner {
+  border: 4px solid var(--color-background-alt);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 15px auto;
+}
+
+/* Ad Container Theme */
+.ad-container {
+  background-color: var(--color-background-alt);
+  border: 3px dashed var(--color-secondary-light);
+  border-radius: 20px;
+  padding: 10px;
+  box-shadow: 0 5px 15px var(--shadow-color);
+}
+
+/* Immersive View Theme */
+.immersive-view {
+  background-color: var(--color-background);
+}
+
+.mini-map-container {
+  border: 5px solid var(--color-secondary);
+  border-radius: 20px;
+  box-shadow: 0 5px 15px var(--shadow-color);
+  overflow: hidden;
+}
+
+.immersive-timer {
+  font-family: 'Varela Round', sans-serif;
+  color: var(--color-text-heading);
+  background-color: var(--color-background-alt);
+  padding: 10px 15px;
+  border-radius: 50px;
+  border: 3px solid var(--color-primary);
+  box-shadow: 0 4px 0 var(--color-primary-dark);
+}
+
+/* Social Sharing Theme */
+.social-sharing {
+  margin: 20px 0;
+}
+
+.share-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--color-background);
+  border: 3px solid var(--color-primary);
+  box-shadow: 0 4px 0 var(--color-primary-dark);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.share-btn:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 9px 0 var(--color-primary-dark);
+}
+
+.share-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 0 var(--color-primary-dark);
+}
+
+/* Game Options Theme */
+.game-options {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: var(--color-background-alt);
+  border: 3px dashed var(--color-secondary);
+  border-radius: 20px;
+  box-shadow: 0 5px 15px var(--shadow-color);
+}
+
+/* Mascot Character Theme */
+.mascot {
+  position: relative;
+  z-index: 1;
+}
+
+.mascot::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 10px;
+  background-color: var(--shadow-color);
+  border-radius: 50%;
+  z-index: -1;
+  filter: blur(3px);
+}
+
+/* Speech Bubble Theme */
+.speech-bubble {
+  background-color: var(--color-background);
+  border: 3px solid var(--color-primary);
+  border-radius: 20px;
+  padding: 15px;
+  position: relative;
+  box-shadow: 0 5px 15px var(--shadow-color);
+}
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 20px;
+  width: 30px;
+  height: 30px;
+  background-color: var(--color-background);
+  border-right: 3px solid var(--color-primary);
+  border-bottom: 3px solid var(--color-primary);
+  transform: rotate(45deg);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--color-background-alt);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary);
+  border-radius: 10px;
+  border: 3px solid var(--color-background-alt);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* Selection Style */
+::selection {
+  background-color: var(--color-primary-light);
+  color: var(--color-text);
+}

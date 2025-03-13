@@ -1,0 +1,13 @@
+/* 
+ * main.css - Main stylesheet that imports all modular CSS files
+ * Part of Japan-tsū frontend restoration
+ */
+
+/* Import all modular CSS files */
+@import 'base.css';
+@import 'layout.css';
+@import 'components.css';
+@import 'animations.css';
+@import 'theme.css';
+
+/* Any additional global styles can be added here */

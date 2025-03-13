@@ -2,8 +2,8 @@
  * panorama.js - Handles Street View panorama functionality
  */
 
-// Panorama variables
-let panorama;
+// Panorama variables - using window.panorama instead of local variable
+// to ensure it's accessible across the module
 
 /**
  * Initialize the Street View panorama
@@ -87,20 +87,35 @@ function findStreetViewLocation(coordinates, callback) {
 }
 
 /**
- * Set the panorama to a new location with random heading
+ * Set the panorama to a new location
  * @param {google.maps.LatLng} location - The location to show
+ * @param {Object} customPov - Optional custom point of view (heading, pitch, zoom)
  */
-function setPanoramaLocation(location) {
-    if (!panorama) {
+function setPanoramaLocation(location, customPov = null) {
+    if (!window.panorama) {
         console.error("Panorama not initialized");
         return;
     }
     
-    panorama.setPosition(location);
-    panorama.setPov({
-        heading: Math.random() * 360,
-        pitch: 0
-    });
+    console.log("Setting panorama location to:", location.lat(), location.lng());
+    window.panorama.setPosition(location);
+    
+    // Use custom POV if provided, otherwise use random heading
+    if (customPov) {
+        window.panorama.setPov({
+            heading: customPov.heading,
+            pitch: customPov.pitch || 0
+        });
+        
+        if (customPov.zoom) {
+            window.panorama.setZoom(customPov.zoom);
+        }
+    } else {
+        window.panorama.setPov({
+            heading: Math.random() * 360,
+            pitch: 0
+        });
+    }
 }
 
 // Export functions for use in other modules
