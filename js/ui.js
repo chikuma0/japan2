@@ -3,7 +3,7 @@
  */
 
 // UI state variables
-let isImmersiveMode = false;
+window.isImmersiveMode = false;
 
 /**
  * Update the score display
@@ -271,7 +271,7 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
  * Toggle immersive mode
  */
 function toggleImmersiveMode() {
-    isImmersiveMode = !isImmersiveMode;
+    window.isImmersiveMode = !window.isImmersiveMode;
     const immersiveView = document.getElementById('immersive-view');
     const gameContainer = document.getElementById('game-container');
     
@@ -280,7 +280,7 @@ function toggleImmersiveMode() {
         return;
     }
     
-    if (isImmersiveMode) {
+    if (window.isImmersiveMode) {
         // Show immersive view with animation
         immersiveView.style.display = 'block';
         immersiveView.classList.add('fade-in');

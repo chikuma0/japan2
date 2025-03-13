@@ -333,6 +333,12 @@ function startTimer() {
 function handleTimeUp() {
     console.log("Time's up! Moving to the next round.");
     
+    // Check if we're in immersive mode and exit if necessary
+    if (window.isImmersiveMode) {
+        console.log("Exiting immersive mode before proceeding to next round");
+        toggleImmersiveMode();
+    }
+    
     // Show a non-blocking message instead of an alert
     const panoramaElement = document.getElementById("panorama");
     if (panoramaElement) {

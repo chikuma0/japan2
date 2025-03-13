@@ -208,10 +208,8 @@
   gap: 10px;
 }
 
-.exit-immersive {
-  position: absolute;
-  top: 20px;
-  right: 20px;
+/* The immersive-controls class is already defined above, we just need to update this */
+#exit-immersive, #back-to-guess {
   z-index: 1002;
 }
 
