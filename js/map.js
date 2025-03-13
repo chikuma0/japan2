@@ -98,6 +98,8 @@ function showActualLocation(actualLatLng) {
     try {
         if (actualMarker) actualMarker.setMap(null);
         
+        console.log('Placing actual location marker at:', actualLatLng.lat(), actualLatLng.lng());
+        
         actualMarker = new google.maps.Marker({
             position: actualLatLng,
             map: map,

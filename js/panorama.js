@@ -75,6 +75,8 @@ function findStreetViewLocation(coordinates, callback) {
     const initialRadius = 5000; // 5km
     const maxRadius = 50000; // 50km max
     
+    console.log('Original requested coordinates:', coordinates.lat(), coordinates.lng());
+    
     // Try to find a panorama with increasing radius
     tryFindPanorama(coordinates, initialRadius);
     
@@ -88,7 +90,13 @@ function findStreetViewLocation(coordinates, callback) {
         }, (data, status) => {
             if (status === 'OK') {
                 const location = data.location.latLng;
+                const distance = google.maps.geometry.spherical.computeDistanceBetween(coords, location) / 1000; // km
                 console.log(`Found Street View at ${location.lat()}, ${location.lng()}`);
+                console.log(`Distance from requested coordinates: ${distance.toFixed(2)} km`);
+                
+                // Log the panorama ID for debugging
+                console.log(`Panorama ID: ${data.location.pano}`);
+                
                 callback(location, null);
             } else {
                 // If not found and we haven't reached max radius, try with a larger radius

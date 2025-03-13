@@ -91,8 +91,17 @@ function continueSetupRound() {
         }
         
         hideLoadingIndicator();
+        
+        // Store both the original coordinates and the actual panorama location
+        const originalCoordinates = new google.maps.LatLng(
+            locationData.coordinates.lat,
+            locationData.coordinates.lng
+        );
+        
+        // Use the panorama location for both the panorama and the actual location marker
         actualLocation = location;
-        console.log('New round location:', location.lat(), location.lng());
+        console.log('Original coordinates:', locationData.coordinates.lat, locationData.coordinates.lng);
+        console.log('Panorama location:', location.lat(), location.lng());
         console.log('Location data:', locationData.name, locationData.region);
         
         // Set the panorama to the new location with custom POV if available
