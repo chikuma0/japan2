@@ -175,21 +175,25 @@
         
         <div class="error-message">
             <h3>API Key Error</h3>
-            <p>The Google Maps API key is restricted to specific domains, and "japan2.xyz" is not in the allowed list.</p>
-            <p>Error: RefererNotAllowedMapError</p>
-            <p>To fix this issue, you need to update the Google Maps API key settings in the Google Cloud Console to allow "japan2.xyz" as an authorized referrer.</p>
+            <p>We're encountering a "RefererNotAllowedMapError" with the Google Maps API.</p>
+            <p>Error details: <code>Your site URL to be authorized: https://japan2.xyz./</code></p>
+            <p>Note the trailing dot in the URL that might be causing the issue.</p>
         </div>
         
         <div class="instructions">
             <h3>How to Fix the API Key Issue:</h3>
+            <p>I see that "japan2.xyz" is already in your allowed referrers list. Here are some additional steps to try:</p>
             <ol>
-                <li>Go to the <a href="https://console.cloud.google.com/google/maps-apis/credentials" style="color: #33ff33;">Google Cloud Console</a></li>
-                <li>Select your project</li>
-                <li>Find the API key used for this project</li>
-                <li>Click on "Edit API key"</li>
-                <li>Under "Application restrictions", select "HTTP referrers"</li>
-                <li>Add "japan2.xyz" and "*.japan2.xyz" to the allowed referrers</li>
-                <li>Click "Save"</li>
+                <li>Add these additional patterns to the allowed referrers:
+                    <ul>
+                        <li><code>https://japan2.xyz./</code> (with the trailing dot)</li>
+                        <li><code>https://japan2.xyz/*</code></li>
+                        <li><code>https://*.japan2.xyz/*</code></li>
+                    </ul>
+                </li>
+                <li>Make sure to click "Save" after adding the new patterns</li>
+                <li>Note that API key changes can take up to 5 minutes to propagate</li>
+                <li>Try clearing your browser cache or using an incognito window</li>
             </ol>
         </div>
         
