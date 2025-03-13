@@ -33,10 +33,10 @@ function shareResult() {
                 ];
                 
                 // Get the total score from the DOM
-                const scoreElement = document.getElementById('final-score');
+                const scoreElement = document.querySelector('#result-container .score-display span');
                 let scoreText = "I played Japan-tsū!";
                 if (scoreElement) {
-                    const scoreMatch = scoreElement.textContent.match(/Final Score: (\d+)/);
+                    const scoreMatch = scoreElement.textContent.match(/(\d+)/);
                     if (scoreMatch && scoreMatch[1]) {
                         scoreText = `I scored ${scoreMatch[1]} points in Japan-tsū!`;
                     }

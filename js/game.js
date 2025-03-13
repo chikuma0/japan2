@@ -685,6 +685,7 @@ window.submitGuess = submitGuess;
 window.calculateScore = calculateScore;
 window.getJapaneseLevel = getJapaneseLevel;
 window.resetGame = resetGame;
+window.resetGameGlobal = resetGame; // Add alias for resetGame to fix play again button
 window.handleTimeUp = handleTimeUp;
 window.setGameDifficulty = setGameDifficulty;
 window.setGameRegion = setGameRegion;

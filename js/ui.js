@@ -195,7 +195,7 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
                 </div>
             </div>
             
-            <div class="result-container">
+            <div class="result-container" id="result-container">
                 <h2>Game Over!</h2>
                 <div class="result-card ${cardClass} pop">
                     <h3 class="japanese-text">${assessment}</h3>
