@@ -186,11 +186,23 @@
         <div id="immersive-timer"></div>
     </div>
 
-    <!-- External Libraries -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCQsM6IW_drrcpvIUBB545G9j4rUGVvIE&libraries=geometry&callback=initMap"></script>
+    <!-- External Libraries (non-Maps) -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     
     <!-- Application JavaScript Modules -->
     <script type="module" src="js/index.js"></script>
+    
+    <!-- Google Maps API (loaded after our modules) -->
+    <script>
+        // This ensures our modules are loaded before Google Maps API tries to call initMap
+        window.addEventListener('load', function() {
+            // Create a script element for Google Maps API
+            const script = document.createElement('script');
+            script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyB7zM7AafXQr2SL2ML96ocKzEjRqpopUFI&libraries=geometry&callback=initMap';
+            script.async = true;
+            script.defer = true;
+            document.body.appendChild(script);
+        });
+    </script>
 </body>
 </html>
