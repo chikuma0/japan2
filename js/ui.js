@@ -2,8 +2,6 @@
  * ui.js - Handles UI updates and interactions
  */
 
-import { getJapaneseLevel } from './game.js';
-
 // UI state variables
 let isImmersiveMode = false;
 
@@ -122,7 +120,7 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
     const scorePercentage = (totalScore / maxPossibleScore) * 100;
     console.log(`Max possible score: ${maxPossibleScore}, Score percentage: ${scorePercentage.toFixed(2)}%`);
     
-    let assessment = getJapaneseLevel(scorePercentage);
+    let assessment = window.getJapaneseLevel ? window.getJapaneseLevel(scorePercentage) : "日本通 (Nihon-tsū)";
     console.log(`Assessment: ${assessment}`);
     
     // Determine which card to show based on score percentage
@@ -295,24 +293,19 @@ function toggleImmersiveMode() {
         
         // Initialize the fullscreen panorama
         try {
-            // Import the panorama module dynamically
-            import('./panorama.js').then(panoramaModule => {
-                // Get the current position, pov, and zoom from the main panorama
-                const position = window.panorama.getPosition();
-                const pov = window.panorama.getPov();
-                const zoom = window.panorama.getZoom();
-                
-                // Initialize the fullscreen panorama
-                window.panoramaFullscreen = panoramaModule.initializeFullscreenPanorama(
-                    position,
-                    pov,
-                    zoom
-                );
-                
-                console.log("Fullscreen panorama initialized");
-            }).catch(error => {
-                console.error("Error initializing fullscreen panorama:", error);
-            });
+            // Get the current position, pov, and zoom from the main panorama
+            const position = window.panorama.getPosition();
+            const pov = window.panorama.getPov();
+            const zoom = window.panorama.getZoom();
+            
+            // Initialize the fullscreen panorama
+            window.panoramaFullscreen = initializeFullscreenPanorama(
+                position,
+                pov,
+                zoom
+            );
+            
+            console.log("Fullscreen panorama initialized");
         } catch (error) {
             console.error("Error in immersive mode panorama setup:", error);
         }
@@ -339,33 +332,29 @@ function toggleImmersiveMode() {
         
         // Initialize mini-map
         try {
-            import('./map.js').then(mapModule => {
-                const miniMapElement = document.getElementById('mini-map');
-                if (miniMapElement) {
-                    window.miniMap = new google.maps.Map(miniMapElement, {
-                        center: window.panorama.getPosition(),
-                        zoom: 15,
-                        mapTypeId: google.maps.MapTypeId.ROADMAP,
-                        disableDefaultUI: true
-                    });
-                    
-                    // Add marker for current position
-                    new google.maps.Marker({
-                        position: window.panorama.getPosition(),
-                        map: window.miniMap,
-                        icon: {
-                            path: google.maps.SymbolPath.CIRCLE,
-                            scale: 7,
-                            fillColor: '#FF9AC1',
-                            fillOpacity: 1,
-                            strokeColor: '#FFFFFF',
-                            strokeWeight: 2
-                        }
-                    });
-                }
-            }).catch(error => {
-                console.error("Error initializing mini-map:", error);
-            });
+            const miniMapElement = document.getElementById('mini-map');
+            if (miniMapElement) {
+                window.miniMap = new google.maps.Map(miniMapElement, {
+                    center: window.panorama.getPosition(),
+                    zoom: 15,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP,
+                    disableDefaultUI: true
+                });
+                
+                // Add marker for current position
+                new google.maps.Marker({
+                    position: window.panorama.getPosition(),
+                    map: window.miniMap,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 7,
+                        fillColor: '#FF9AC1',
+                        fillOpacity: 1,
+                        strokeColor: '#FFFFFF',
+                        strokeWeight: 2
+                    }
+                });
+            }
         } catch (error) {
             console.error("Error in immersive mode map setup:", error);
         }
@@ -613,20 +602,18 @@ function showConfetti(count = 30) {
     }, 4000);
 }
 
-// Export functions for use in other modules
-export {
-    updateScore,
-    updateRound,
-    showResult,
-    endGame,
-    toggleImmersiveMode,
-    updateImmersiveTimer,
-    enableSubmitButton,
-    disableSubmitButton,
-    checkElements,
-    showLoadingIndicator,
-    hideLoadingIndicator,
-    showLocationInfo,
-    updateTimerProgress,
-    showConfetti
-};
+// Make functions globally available
+window.updateScore = updateScore;
+window.updateRound = updateRound;
+window.showResult = showResult;
+window.endGame = endGame;
+window.toggleImmersiveMode = toggleImmersiveMode;
+window.updateImmersiveTimer = updateImmersiveTimer;
+window.enableSubmitButton = enableSubmitButton;
+window.disableSubmitButton = disableSubmitButton;
+window.checkElements = checkElements;
+window.showLoadingIndicator = showLoadingIndicator;
+window.hideLoadingIndicator = hideLoadingIndicator;
+window.showLocationInfo = showLocationInfo;
+window.updateTimerProgress = updateTimerProgress;
+window.showConfetti = showConfetti;

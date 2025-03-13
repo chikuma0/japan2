@@ -5,7 +5,7 @@
 /**
  * Location categories for organizing the database
  */
-export const LOCATION_CATEGORIES = {
+const LOCATION_CATEGORIES = {
     URBAN: 'urban',
     RURAL: 'rural',
     COASTAL: 'coastal',
@@ -17,7 +17,7 @@ export const LOCATION_CATEGORIES = {
 /**
  * Difficulty levels for locations
  */
-export const DIFFICULTY_LEVELS = {
+const DIFFICULTY_LEVELS = {
     EASY: 'easy',         // Famous landmarks, distinctive features
     MEDIUM: 'medium',     // Less famous but still recognizable locations
     HARD: 'hard',         // Challenging locations with few distinctive features
@@ -27,7 +27,7 @@ export const DIFFICULTY_LEVELS = {
 /**
  * Regions of Japan for categorizing locations
  */
-export const JAPAN_REGIONS = {
+const JAPAN_REGIONS = {
     HOKKAIDO: 'Hokkaido',
     TOHOKU: 'Tohoku',
     KANTO: 'Kanto',
@@ -50,7 +50,7 @@ export const JAPAN_REGIONS = {
  * - pov (optional custom point of view - heading, pitch, zoom)
  * - facts (optional interesting facts about the location)
  */
-export const LOCATIONS_DB = [
+const LOCATIONS_DB = [
     // TOKYO AREA - KANTO
     {
         coordinates: { lat: 35.6895, lng: 139.6917 },
@@ -299,7 +299,7 @@ export const LOCATIONS_DB = [
  * @param {Object} filters - Optional filters for category, difficulty, region
  * @returns {Object} A random location object
  */
-export function getRandomLocation(filters = {}) {
+function getRandomLocation(filters = {}) {
     let filteredLocations = [...LOCATIONS_DB];
     
     // Apply filters if provided
@@ -331,7 +331,7 @@ export function getRandomLocation(filters = {}) {
  * @param {string} region - The region to filter by
  * @returns {Array} Array of location objects in the specified region
  */
-export function getLocationsByRegion(region) {
+function getLocationsByRegion(region) {
     return LOCATIONS_DB.filter(loc => loc.region === region);
 }
 
@@ -340,7 +340,7 @@ export function getLocationsByRegion(region) {
  * @param {string} difficulty - The difficulty level to filter by
  * @returns {Array} Array of location objects with the specified difficulty
  */
-export function getLocationsByDifficulty(difficulty) {
+function getLocationsByDifficulty(difficulty) {
     return LOCATIONS_DB.filter(loc => loc.difficulty === difficulty);
 }
 
@@ -349,6 +349,16 @@ export function getLocationsByDifficulty(difficulty) {
  * @param {string} category - The category to filter by
  * @returns {Array} Array of location objects in the specified category
  */
-export function getLocationsByCategory(category) {
+function getLocationsByCategory(category) {
     return LOCATIONS_DB.filter(loc => loc.category === category);
 }
+
+// Make variables and functions globally available
+window.LOCATION_CATEGORIES = LOCATION_CATEGORIES;
+window.DIFFICULTY_LEVELS = DIFFICULTY_LEVELS;
+window.JAPAN_REGIONS = JAPAN_REGIONS;
+window.LOCATIONS_DB = LOCATIONS_DB;
+window.getRandomLocation = getRandomLocation;
+window.getLocationsByRegion = getLocationsByRegion;
+window.getLocationsByDifficulty = getLocationsByDifficulty;
+window.getLocationsByCategory = getLocationsByCategory;

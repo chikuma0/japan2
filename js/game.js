@@ -2,11 +2,6 @@
  * game.js - Handles game logic and scoring
  */
 
-import { showActualLocation, resetMap } from './map.js';
-import { findStreetViewLocation, setPanoramaLocation } from './panorama.js';
-import { updateScore, updateRound, showResult, endGame, enableSubmitButton, disableSubmitButton, showLoadingIndicator, hideLoadingIndicator, showLocationInfo, updateTimerProgress, showConfetti } from './ui.js';
-import { getRandomLocation, LOCATIONS_DB, DIFFICULTY_LEVELS, LOCATION_CATEGORIES, JAPAN_REGIONS } from './locations-db.js';
-
 // Game state variables
 let actualLocation;
 let totalScore = 0;
@@ -61,13 +56,8 @@ function setupNewRound() {
         // Ensure panorama is initialized
         if (!window.panorama) {
             console.log("Panorama not initialized, initializing now");
-            import('./panorama.js').then(panoramaModule => {
-                window.panorama = panoramaModule.initializePanorama();
-                continueSetupRound();
-            }).catch(error => {
-                console.error("Error initializing panorama:", error);
-                handleStreetViewError();
-            });
+            window.panorama = initializePanorama();
+            continueSetupRound();
         } else {
             continueSetupRound();
         }
@@ -561,24 +551,14 @@ function resetGame(settings = {}) {
     // This is done asynchronously to ensure the DOM elements are ready
     setTimeout(() => {
         try {
-            // Import modules dynamically
-            Promise.all([
-                import('./map.js'),
-                import('./panorama.js')
-            ]).then(([mapModule, panoramaModule]) => {
-                console.log("Reinitializing map and panorama");
-                
-                // Initialize map and panorama
-                window.map = mapModule.initializeMap();
-                window.panorama = panoramaModule.initializePanorama();
-                
-                // Initialize the game again with settings
-                initGame(settings);
-            }).catch(error => {
-                console.error("Error importing modules:", error);
-                // Still try to initialize the game even if there was an error
-                initGame(settings);
-            });
+            console.log("Reinitializing map and panorama");
+            
+            // Initialize map and panorama
+            window.map = initializeMap();
+            window.panorama = initializePanorama();
+            
+            // Initialize the game again with settings
+            initGame(settings);
         } catch (error) {
             console.error("Error in resetGame:", error);
             // Still try to initialize the game even if there was an error
@@ -638,20 +618,15 @@ function resetGameSettings() {
     console.log('Game settings reset to default (all locations)');
 }
 
-// Export functions for use in other modules
-export {
-    initGame,
-    setupNewRound,
-    submitGuess,
-    calculateScore,
-    getJapaneseLevel,
-    resetGame,
-    handleTimeUp,
-    setGameDifficulty,
-    setGameRegion,
-    setGameCategory,
-    resetGameSettings,
-    DIFFICULTY_LEVELS,
-    LOCATION_CATEGORIES,
-    JAPAN_REGIONS
-};
+// Make functions globally available
+window.initGame = initGame;
+window.setupNewRound = setupNewRound;
+window.submitGuess = submitGuess;
+window.calculateScore = calculateScore;
+window.getJapaneseLevel = getJapaneseLevel;
+window.resetGame = resetGame;
+window.handleTimeUp = handleTimeUp;
+window.setGameDifficulty = setGameDifficulty;
+window.setGameRegion = setGameRegion;
+window.setGameCategory = setGameCategory;
+window.resetGameSettings = resetGameSettings;

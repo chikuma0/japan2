@@ -249,17 +249,15 @@ function getRandomCoordinates() {
     return { lat, lng };
 }
 
-// Export functions for use in other modules
-export {
-    initializeMap,
-    placeGuessMarker,
-    showActualLocation,
-    createPixelIcon,
-    createArrowSymbol,
-    animateArrowSlower,
-    resetMap,
-    getRandomCoordinates
-};
+// Make functions globally available
+window.initializeMap = initializeMap;
+window.placeGuessMarker = placeGuessMarker;
+window.showActualLocation = showActualLocation;
+window.createPixelIcon = createPixelIcon;
+window.createArrowSymbol = createArrowSymbol;
+window.animateArrowSlower = animateArrowSlower;
+window.resetMap = resetMap;
+window.getRandomCoordinates = getRandomCoordinates;
 
 // Log that the map.js module has loaded
 console.log("map.js module loaded");

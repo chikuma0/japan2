@@ -156,10 +156,8 @@ function createShareableImage() {
     });
 }
 
-// Export functions for use in other modules
-export {
-    shareResult,
-    fallbackShare,
-    copyToClipboard,
-    createShareableImage
-};
+// Make functions globally available
+window.shareResult = shareResult;
+window.fallbackShare = fallbackShare;
+window.copyToClipboard = copyToClipboard;
+window.createShareableImage = createShareableImage;
