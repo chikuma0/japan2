@@ -316,7 +316,14 @@
 }
 
 /* Responsive Layout */
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
+  .game-layout {
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 1100px) {
   .game-layout {
     grid-template-columns: 1fr 1fr;
   }
@@ -325,7 +332,7 @@
     grid-column: span 2;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 15px;
   }
 }
 
