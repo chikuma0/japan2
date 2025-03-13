@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <rect width="300" height="300" fill="#1a1a1a" />
+  <rect x="10" y="10" width="280" height="280" fill="none" stroke="#33ff33" stroke-width="4" />
+  <text x="150" y="150" font-family="sans-serif" font-size="24" fill="#33ff33" text-anchor="middle">Expert Card</text>
+  <text x="150" y="180" font-family="sans-serif" font-size="18" fill="#33ff33" text-anchor="middle">日本通</text>
+</svg>

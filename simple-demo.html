@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japan-tsū Simple Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #0a0a0a;
+            color: #33ff33;
+            text-align: center;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #33ff33;
+            text-shadow: 2px 2px 0px #006400;
+            margin-bottom: 20px;
+        }
+
+        #game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #1a1a1a;
+            border: 4px solid #33ff33;
+            padding: 20px;
+            box-shadow: 0 0 0 4px #006400, 0 0 10px rgba(51, 255, 51, 0.5);
+        }
+
+        #panorama, #map {
+            height: 400px;
+            width: 100%;
+            margin-bottom: 20px;
+            border: 2px solid #33ff33;
+        }
+
+        #timer {
+            font-size: 24px;
+            color: #33ff33;
+            margin-bottom: 10px;
+        }
+
+        button {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #006400;
+            color: #33ff33;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            image-rendering: pixelated;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #008000;
+        }
+
+        #score, #round {
+            background-color: #0a0a0a;
+            color: #33ff33;
+            border: 2px solid #006400;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .pulse {
+            animation: pulse 0.5s ease-in-out 3;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .result-card {
+            width: 90%;
+            max-width: 300px;
+            height: auto;
+            aspect-ratio: 1 / 1;
+            margin: 20px auto;
+            background-color: #1a1a1a;
+            border: 4px solid #33ff33;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .card-subtitle {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .card-stars {
+            font-size: 24px;
+            color: #ffcc00;
+            margin-bottom: 20px;
+        }
+
+        .instructions {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Japan-tsū Simple Demo</h1>
+        <div class="instructions">
+            <p>This is a simplified demo of Japan-tsū to demonstrate the core functionality.</p>
+            <p>The full version requires configuring the Google Maps API key to allow localhost.</p>
+        </div>
+        
+        <div class="result-card">
+            <div class="card-title">日本地理マスター</div>
+            <div class="card-subtitle">NIHON CHIRI MASTER</div>
+            <div class="card-stars">★★★</div>
+            <div>90-100%</div>
+        </div>
+        
+        <div class="result-card" style="display: none;">
+            <div class="card-title">日本通</div>
+            <div class="card-subtitle">NIHON-TSŪ</div>
+            <div class="card-stars">★★☆</div>
+            <div>70-89%</div>
+        </div>
+        
+        <div class="result-card" style="display: none;">
+            <div class="card-title">地理オタク</div>
+            <div class="card-subtitle">CHIRI OTAKU</div>
+            <div class="card-stars">★☆☆</div>
+            <div>50-69%</div>
+        </div>
+        
+        <div class="result-card" style="display: none;">
+            <div class="card-title">旅行好き</div>
+            <div class="card-subtitle">RYOKŌ-ZUKI</div>
+            <div class="card-stars">★☆☆</div>
+            <div>30-49%</div>
+        </div>
+        
+        <div class="result-card" style="display: none;">
+            <div class="card-title">駅前迷子</div>
+            <div class="card-subtitle">EKIMAE MAIGO</div>
+            <div class="card-stars">☆☆☆</div>
+            <div>0-29%</div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Simple demo loaded successfully');
+        });
+    </script>
+</body>
+</html>
