@@ -472,7 +472,179 @@ function submitGuess() {
                 isSubmitting = false;
             }, 1000);
             
-            setTimeout(setupNewRound, 7000); // Increased delay to give players time to read location info
+            // Phase 1: Show round result for a few seconds (already visible at this point)
+            // Add a "preparing journey" indicator after 1 second
+            setTimeout(() => {
+                const resultElement = document.getElementById('result');
+                if (resultElement) {
+                    const journeyIndicator = document.createElement('div');
+                    journeyIndicator.className = 'journey-indicator';
+                    journeyIndicator.style.marginTop = '15px';
+                    journeyIndicator.style.padding = '8px';
+                    journeyIndicator.style.backgroundColor = 'rgba(255, 117, 171, 0.1)';
+                    journeyIndicator.style.borderRadius = '5px';
+                    journeyIndicator.style.textAlign = 'center';
+                    journeyIndicator.style.animation = 'pulse 1.5s infinite';
+                    journeyIndicator.innerHTML = `
+                        <div style="font-weight: bold; margin-bottom: 5px;">Preparing for journey...</div>
+                        <div style="font-size: 14px;">Next location loading</div>
+                    `;
+                    resultElement.appendChild(journeyIndicator);
+                    
+                    // Add pulse animation
+                    const pulseStyle = document.createElement('style');
+                    pulseStyle.textContent = `
+                        @keyframes pulse {
+                            0% { opacity: 0.6; }
+                            50% { opacity: 1; }
+                            100% { opacity: 0.6; }
+                        }
+                    `;
+                    document.head.appendChild(pulseStyle);
+                }
+                
+                // Phase 2: Start journey animation while keeping result visible
+                setTimeout(() => {
+                    // Slide result to top in compact mode
+                    const resultElement = document.getElementById('result');
+                    if (resultElement) {
+                        // Add transition styles
+                        resultElement.style.transition = 'all 0.25s ease';
+                        
+                        // Move to top of screen
+                        resultElement.style.position = 'fixed';
+                        resultElement.style.top = '10px';
+                        resultElement.style.left = '50%';
+                        resultElement.style.transform = 'translateX(-50%)';
+                        resultElement.style.zIndex = '10000';
+                        resultElement.style.maxWidth = '300px';
+                        resultElement.style.padding = '5px 10px';
+                        resultElement.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                        resultElement.style.borderRadius = '10px';
+                        resultElement.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+                        
+                        // Make card body more compact
+                        const cardBody = resultElement.querySelector('.card-body');
+                        if (cardBody) {
+                            cardBody.style.display = 'flex';
+                            cardBody.style.justifyContent = 'space-between';
+                            cardBody.style.padding = '5px';
+                        }
+                    }
+                    
+                    // Create journey animation overlay that covers the entire screen
+                    const journeyOverlay = document.createElement('div');
+                    journeyOverlay.className = 'journey-overlay';
+                    journeyOverlay.style.position = 'fixed';
+                    journeyOverlay.style.top = '0';
+                    journeyOverlay.style.left = '0';
+                    journeyOverlay.style.width = '100%';
+                    journeyOverlay.style.height = '100%';
+                    journeyOverlay.style.backgroundColor = 'rgba(255, 240, 245, 0.9)';
+                    journeyOverlay.style.zIndex = '9999';
+                    journeyOverlay.style.display = 'flex';
+                    journeyOverlay.style.flexDirection = 'column';
+                    journeyOverlay.style.justifyContent = 'center';
+                    journeyOverlay.style.alignItems = 'center';
+                    journeyOverlay.style.fontFamily = 'Varela Round, sans-serif';
+                    journeyOverlay.style.color = '#FF75AB';
+                    journeyOverlay.style.fontSize = '24px';
+                    journeyOverlay.style.textAlign = 'center';
+                    journeyOverlay.style.padding = '20px';
+                    
+                    // Add content to the overlay
+                    journeyOverlay.innerHTML = `
+                        <div class="mascot" style="width: 100px; height: 100px; margin-bottom: 20px; animation: bounce 0.5s infinite alternate;">
+                            <div style="width: 100%; height: 100%; background-color: #FF75AB; border-radius: 50%; position: relative; overflow: hidden;">
+                                <div style="position: absolute; top: 30%; left: 50%; transform: translateX(-50%); width: 60%; height: 40%; display: flex; justify-content: space-between;">
+                                    <div style="width: 15px; height: 15px; background-color: #333; border-radius: 50%;"></div>
+                                    <div style="width: 15px; height: 15px; background-color: #333; border-radius: 50%;"></div>
+                                </div>
+                                <div style="position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); width: 30%; height: 10%; border-bottom: 3px solid #333; border-radius: 50%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="message" style="font-size: 28px; font-weight: bold; margin: 20px 0;">Traveling to next location...</div>
+                        
+                        <div class="landmarks" style="display: flex; gap: 20px; margin: 20px 0; justify-content: center;">
+                            <div style="font-size: 40px; animation: pop 0.25s forwards;">🗼</div>
+                            <div style="font-size: 40px; animation: pop 0.25s forwards; animation-delay: 0.15s;">🗻</div>
+                            <div style="font-size: 40px; animation: pop 0.25s forwards; animation-delay: 0.3s;">🏯</div>
+                            <div style="font-size: 40px; animation: pop 0.25s forwards; animation-delay: 0.45s;">🚅</div>
+                        </div>
+                        
+                        <div class="progress-container" style="width: 80%; max-width: 400px; height: 20px; background-color: #FFF; border-radius: 10px; overflow: hidden; margin: 20px auto; border: 2px solid #FF75AB;">
+                            <div class="progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #FF75AB, #FFB6C1); transition: width 2.5s ease;"></div>
+                        </div>
+                    `;
+                    
+                    // Add animation styles
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        @keyframes bounce {
+                            0% { transform: translateY(0); }
+                            100% { transform: translateY(-20px); }
+                        }
+                        
+                        @keyframes pop {
+                            0% { transform: scale(0); }
+                            70% { transform: scale(1.2); }
+                            100% { transform: scale(1); }
+                        }
+                    `;
+                    journeyOverlay.appendChild(style);
+                    
+                    // Add to document
+                    document.body.appendChild(journeyOverlay);
+                    
+                    // Animate progress bar
+                    setTimeout(() => {
+                        const progressBar = journeyOverlay.querySelector('.progress-bar');
+                        if (progressBar) {
+                            progressBar.style.width = '100%';
+                        }
+                    }, 50);
+                    
+                    // Remove overlay and restore result after animation completes
+                    setTimeout(() => {
+                        // Remove journey overlay
+                        if (journeyOverlay.parentNode) {
+                            journeyOverlay.parentNode.removeChild(journeyOverlay);
+                        }
+                        
+                        // Reset result element to original state
+                        if (resultElement) {
+                            resultElement.style.position = '';
+                            resultElement.style.top = '';
+                            resultElement.style.left = '';
+                            resultElement.style.transform = '';
+                            resultElement.style.zIndex = '';
+                            resultElement.style.maxWidth = '';
+                            resultElement.style.padding = '';
+                            resultElement.style.backgroundColor = '';
+                            resultElement.style.borderRadius = '';
+                            resultElement.style.boxShadow = '';
+                            
+                            // Reset card body
+                            const cardBody = resultElement.querySelector('.card-body');
+                            if (cardBody) {
+                                cardBody.style.display = '';
+                                cardBody.style.justifyContent = '';
+                                cardBody.style.padding = '';
+                            }
+                            
+                            // Remove journey indicator
+                            const journeyIndicator = resultElement.querySelector('.journey-indicator');
+                            if (journeyIndicator && journeyIndicator.parentNode) {
+                                journeyIndicator.parentNode.removeChild(journeyIndicator);
+                            }
+                        }
+                        
+                        // Start next round
+                        setupNewRound();
+                    }, 3000);
+                }, 2000); // Start phase 2 after 2 seconds
+            }, 500); // Start phase 1 after 0.5 seconds
         }
     } catch (error) {
         console.error("Error in submitGuess function:", error);

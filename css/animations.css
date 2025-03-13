@@ -347,6 +347,140 @@
   animation-delay: 0.4s;
 }
 
+/* Japan Journey Animation Keyframes */
+@keyframes elasticAppear {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.2); opacity: 1; }
+  80% { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes packSuitcase {
+  0% { transform: scale(1) rotate(0deg); }
+  20% { transform: scale(1.2) rotate(-5deg); }
+  40% { transform: scale(0.9) rotate(5deg); }
+  60% { transform: scale(1.1) rotate(-3deg); }
+  80% { transform: scale(0.95) rotate(3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes travelPath {
+  0% { stroke-dashoffset: 1000; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes mascotTravel {
+  0% { transform: translateX(0) translateY(0) rotate(0deg); }
+  10% { transform: translateX(30px) translateY(-20px) rotate(10deg); }
+  20% { transform: translateX(60px) translateY(-10px) rotate(-5deg); }
+  30% { transform: translateX(90px) translateY(-30px) rotate(15deg); }
+  40% { transform: translateX(120px) translateY(-15px) rotate(-10deg); }
+  50% { transform: translateX(150px) translateY(-25px) rotate(5deg); }
+  60% { transform: translateX(180px) translateY(-5px) rotate(-15deg); }
+  70% { transform: translateX(210px) translateY(-20px) rotate(10deg); }
+  80% { transform: translateX(240px) translateY(-10px) rotate(-5deg); }
+  90% { transform: translateX(270px) translateY(-15px) rotate(10deg); }
+  100% { transform: translateX(300px) translateY(0) rotate(0deg); }
+}
+
+@keyframes landmarkPopUp {
+  0% { transform: scale(0) translateY(20px); opacity: 0; }
+  60% { transform: scale(1.3) translateY(-10px); opacity: 1; }
+  80% { transform: scale(0.9) translateY(5px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes searchWithMagnifier {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-30deg) scale(1.2); }
+  50% { transform: rotate(0deg) scale(1.1); }
+  75% { transform: rotate(30deg) scale(1.2); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+@keyframes mysteryBoxReveal {
+  0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+  40% { transform: scale(1.3) rotate(10deg); opacity: 1; }
+  60% { transform: scale(0.9) rotate(-5deg); opacity: 1; }
+  80% { transform: scale(1.1) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes questionMarkFloat {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  50% { transform: translateY(-20px) scale(1.2); opacity: 0.7; }
+  100% { transform: translateY(-40px) scale(0.8); opacity: 0; }
+}
+
+@keyframes zigzagPath {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(10px); }
+  50% { transform: translateX(0); }
+  75% { transform: translateX(-10px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes regionGlow {
+  0% { opacity: 0.2; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.2; }
+}
+
+@keyframes celebrateJump {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-30px) scale(1.2); }
+  60% { transform: translateY(-30px) scale(1.2) rotate(10deg); }
+  80% { transform: translateY(-10px) scale(1.1) rotate(-10deg); }
+  100% { transform: translateY(0) scale(1) rotate(0deg); }
+}
+
+/* Japan Journey Animation Classes */
+.elastic-appear {
+  animation: elasticAppear 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.pack-suitcase {
+  animation: packSuitcase 1.5s ease-in-out;
+}
+
+.travel-path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: travelPath 3s ease-in-out forwards;
+}
+
+.mascot-travel {
+  animation: mascotTravel 4s ease-in-out forwards;
+}
+
+.landmark-pop-up {
+  animation: landmarkPopUp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.search-with-magnifier {
+  animation: searchWithMagnifier 2s ease-in-out infinite;
+}
+
+.mystery-box-reveal {
+  animation: mysteryBoxReveal 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.question-mark-float {
+  animation: questionMarkFloat 2s ease-in-out infinite;
+}
+
+.zigzag-path {
+  animation: zigzagPath 0.5s ease-in-out infinite;
+}
+
+.region-glow {
+  animation: regionGlow 2s ease-in-out infinite;
+}
+
+.celebrate-jump {
+  animation: celebrateJump 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
 /* Reduce Motion (Accessibility) */
 @media (prefers-reduced-motion: reduce) {
   * {

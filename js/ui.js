@@ -429,44 +429,57 @@ function checkElements() {
 
 /**
  * Show a loading indicator while finding a Street View location
+ * Uses the Japan Journey animation for a more engaging experience
  */
 function showLoadingIndicator() {
-    // Create loading indicator if it doesn't exist
-    let loadingIndicator = document.getElementById('loading-indicator');
+    console.log("Showing Japan Journey loading animation");
     
-    if (!loadingIndicator) {
-        loadingIndicator = document.createElement('div');
-        loadingIndicator.id = 'loading-indicator';
-        loadingIndicator.className = 'loading-indicator';
+    // Check if we're between rounds (not the first round)
+    const currentRound = document.getElementById("round")?.textContent;
+    const isFirstRound = !currentRound || currentRound.includes("1 /");
+    
+    // Use the journey animation for transitions between rounds
+    if (!isFirstRound && window.journeyAnimation) {
+        // Start the journey animation
+        window.journeyAnimation.start();
+    } else {
+        // Fallback to simple loading indicator for first round
+        let loadingIndicator = document.getElementById('loading-indicator');
         
-        // Add mascot and loading message
-        loadingIndicator.innerHTML = `
-            <div class="mascot mascot-sm">
-                <div class="japan-mascot">
-                    <div class="mascot-face">
-                        <div class="mascot-eyes">
-                            <div class="mascot-eye"></div>
-                            <div class="mascot-eye"></div>
+        if (!loadingIndicator) {
+            loadingIndicator = document.createElement('div');
+            loadingIndicator.id = 'loading-indicator';
+            loadingIndicator.className = 'loading-indicator';
+            
+            // Add mascot and loading message
+            loadingIndicator.innerHTML = `
+                <div class="mascot mascot-sm">
+                    <div class="japan-mascot">
+                        <div class="mascot-face">
+                            <div class="mascot-eyes">
+                                <div class="mascot-eye"></div>
+                                <div class="mascot-eye"></div>
+                            </div>
+                            <div class="mascot-blush"></div>
+                            <div class="mascot-mouth"></div>
                         </div>
-                        <div class="mascot-blush"></div>
-                        <div class="mascot-mouth"></div>
                     </div>
                 </div>
-            </div>
-            <div class="loading-spinner"></div>
-            <p>Finding a cool spot in Japan...</p>
-        `;
-        
-        // Add to panorama container
-        const panoramaElement = document.getElementById('panorama');
-        if (panoramaElement) {
-            panoramaElement.style.position = 'relative';
-            panoramaElement.appendChild(loadingIndicator);
+                <div class="loading-spinner"></div>
+                <p>Finding a cool spot in Japan...</p>
+            `;
+            
+            // Add to panorama container
+            const panoramaElement = document.getElementById('panorama');
+            if (panoramaElement) {
+                panoramaElement.style.position = 'relative';
+                panoramaElement.appendChild(loadingIndicator);
+            } else {
+                document.body.appendChild(loadingIndicator);
+            }
         } else {
-            document.body.appendChild(loadingIndicator);
+            loadingIndicator.style.display = 'block';
         }
-    } else {
-        loadingIndicator.style.display = 'block';
     }
 }
 
@@ -474,6 +487,14 @@ function showLoadingIndicator() {
  * Hide the loading indicator
  */
 function hideLoadingIndicator() {
+    console.log("Hiding loading animation");
+    
+    // Stop journey animation if it's running
+    if (window.journeyAnimation) {
+        window.journeyAnimation.stop();
+    }
+    
+    // Also hide the simple loading indicator if it exists
     const loadingIndicator = document.getElementById('loading-indicator');
     if (loadingIndicator) {
         loadingIndicator.style.display = 'none';

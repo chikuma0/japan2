@@ -278,12 +278,63 @@
   color: var(--color-text-heading);
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
+  transition: all 0.3s ease;
+  position: relative;
+  min-width: 100px;
+  text-align: center;
 }
 
 .timer-display .timer-icon {
   width: 24px;
   height: 24px;
+}
+
+/* Loading Mode for Timer Display */
+.timer-display.loading-mode {
+  background-color: var(--color-background-alt);
+  border-radius: 50px;
+  padding: 8px 20px;
+  border: 3px solid var(--color-accent);
+  box-shadow: 0 4px 8px var(--shadow-color), 0 0 15px var(--color-primary);
+  animation: float 3s ease-in-out infinite;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+  transition: all 0.5s ease;
+  min-width: 200px;
+  position: relative;
+  z-index: 9999;
+}
+
+.timer-display.loading-mode::before {
+  content: '🗾';
+  margin-right: 8px;
+  animation: spin 2s linear infinite;
+  display: inline-block;
+}
+
+.timer-display.loading-mode::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border-radius: 50px;
+  background: linear-gradient(45deg,
+    var(--color-primary) 0%,
+    transparent 25%,
+    transparent 75%,
+    var(--color-accent) 100%);
+  z-index: -1;
+  opacity: 0.5;
+  animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Score Display */
@@ -509,4 +560,219 @@
 .result-card-novice {
   background: linear-gradient(135deg, var(--color-secondary-light), var(--color-secondary));
   border-color: var(--color-secondary);
+}
+
+/* Japan Journey Animation Container */
+.journey-animation-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-background);
+  border-radius: 15px;
+  overflow: hidden;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Japan Map Container */
+.japan-map-container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: 0 auto;
+}
+
+.japan-map {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+/* Travel Path */
+.travel-path {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    transparent 49%,
+    var(--color-primary) 49%,
+    var(--color-primary) 51%,
+    transparent 51%,
+    transparent 100%
+  );
+  background-size: 20px 100%;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Cpath d='M50,150 C100,100 150,200 200,150 C250,100 300,150 350,100' stroke='black' fill='none' stroke-width='10'/%3E%3C/svg%3E");
+  mask-size: cover;
+  opacity: 0;
+}
+
+/* Landmarks Container */
+.landmarks-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.landmark {
+  position: absolute;
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--color-background);
+  border-radius: 50%;
+  border: 2px solid var(--color-primary);
+  box-shadow: 0 4px 8px var(--shadow-color);
+  opacity: 0;
+}
+
+/* Mascot Journey */
+.mascot-journey {
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  transform: translateY(-50%);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mascot-journey .mascot-character {
+  width: 60px;
+  height: 60px;
+}
+
+.mascot-suitcase {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 20px;
+  background-color: var(--color-secondary);
+  border-radius: 5px;
+  border: 2px solid var(--color-secondary-dark);
+  display: none;
+}
+
+.mascot-suitcase::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 5px;
+  background-color: var(--color-secondary-dark);
+  border-radius: 5px 5px 0 0;
+}
+
+.mascot-magnifier {
+  position: absolute;
+  top: -30px;
+  right: -20px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid var(--color-secondary);
+  background-color: rgba(255, 255, 255, 0.5);
+  display: none;
+}
+
+.mascot-magnifier::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  right: -5px;
+  width: 15px;
+  height: 5px;
+  background-color: var(--color-secondary);
+  transform: rotate(45deg);
+  border-radius: 5px;
+}
+
+/* Journey Message */
+.journey-message {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--color-background);
+  padding: 10px 20px;
+  border-radius: 50px;
+  border: 3px solid var(--color-primary);
+  box-shadow: 0 4px 8px var(--shadow-color);
+  z-index: 40;
+  min-width: 200px;
+  text-align: center;
+}
+
+/* Mystery Destination */
+.mystery-destination {
+  position: absolute;
+  top: 50%;
+  right: 10%;
+  transform: translateY(-50%);
+  z-index: 30;
+}
+
+.mystery-box {
+  width: 60px;
+  height: 60px;
+  background-color: var(--color-accent);
+  border-radius: 10px;
+  border: 3px dashed var(--color-accent-dark);
+  box-shadow: 0 4px 8px var(--shadow-color);
+  position: relative;
+  display: none;
+}
+
+.mystery-box::before, .mystery-box::after {
+  content: '';
+  position: absolute;
+  background-color: var(--color-accent-dark);
+}
+
+.mystery-box::before {
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 3px;
+  transform: translateY(-50%);
+}
+
+.mystery-box::after {
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  transform: translateX(-50%);
+}
+
+.question-marks {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--color-accent-dark);
+  display: none;
 }
