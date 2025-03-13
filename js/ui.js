@@ -701,6 +701,87 @@ function showConfetti(count = 30) {
     }, 4000);
 }
 
+/**
+ * Initialize responsive layout helpers
+ */
+function initResponsiveHelpers() {
+    // Detect viewport size changes
+    const mediaQuery = window.matchMedia('(min-width: 1024px) and (max-width: 1439px)');
+    
+    function handleScreenChange(e) {
+        if (e.matches) {
+            // Laptop mode - add any specific adjustments
+            document.body.classList.add('laptop-mode');
+        } else {
+            document.body.classList.remove('laptop-mode');
+        }
+    }
+    
+    // Initial check
+    handleScreenChange(mediaQuery);
+    
+    // Add listener for changes
+    mediaQuery.addEventListener('change', handleScreenChange);
+    
+    // Initialize map toggle
+    initMapToggle();
+    
+    // Initialize layout preference
+    initLayoutPreference();
+}
+
+/**
+ * Initialize map functionality (no toggle needed as map is always visible)
+ */
+function initMapToggle() {
+    // Map is now always visible, so no toggle functionality needed
+    console.log("Map is always visible - no toggle needed");
+}
+
+/**
+ * Initialize layout preference toggle
+ */
+function initLayoutPreference() {
+    const layoutToggle = document.createElement('button');
+    layoutToggle.className = 'btn btn-sm layout-toggle';
+    layoutToggle.textContent = 'Toggle Layout';
+    
+    // Add to game settings
+    const gameSettings = document.querySelector('.game-settings');
+    if (gameSettings) {
+        gameSettings.appendChild(layoutToggle);
+    } else {
+        // If game settings doesn't exist, add to header
+        const gameHeader = document.querySelector('.game-header');
+        if (gameHeader) {
+            const settingsDiv = document.createElement('div');
+            settingsDiv.className = 'game-settings';
+            settingsDiv.appendChild(layoutToggle);
+            gameHeader.appendChild(settingsDiv);
+        }
+    }
+    
+    // Toggle between layout modes
+    layoutToggle.addEventListener('click', function() {
+        document.body.classList.toggle('vertical-layout');
+        
+        // Save preference
+        const isVertical = document.body.classList.contains('vertical-layout');
+        localStorage.setItem('japan-tsu-vertical-layout', isVertical ? 'true' : 'false');
+    });
+    
+    // Check saved preference
+    const savedPreference = localStorage.getItem('japan-tsu-vertical-layout');
+    if (savedPreference === 'true') {
+        document.body.classList.add('vertical-layout');
+    }
+}
+
+// Initialize responsive helpers when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initResponsiveHelpers();
+});
+
 // Make functions globally available
 window.updateScore = updateScore;
 window.updateRound = updateRound;
@@ -716,3 +797,6 @@ window.hideLoadingIndicator = hideLoadingIndicator;
 window.showLocationInfo = showLocationInfo;
 window.updateTimerProgress = updateTimerProgress;
 window.showConfetti = showConfetti;
+window.initResponsiveHelpers = initResponsiveHelpers;
+window.initMapToggle = initMapToggle;
+window.initLayoutPreference = initLayoutPreference;
