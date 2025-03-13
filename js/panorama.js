@@ -137,10 +137,8 @@ function setPanoramaLocation(location, customPov = null) {
     }
 }
 
-// Export functions for use in other modules
-export {
-    initializePanorama,
-    initializeFullscreenPanorama,
-    findStreetViewLocation,
-    setPanoramaLocation
-};
+// Make functions globally available
+window.initializePanorama = initializePanorama;
+window.initializeFullscreenPanorama = initializeFullscreenPanorama;
+window.findStreetViewLocation = findStreetViewLocation;
+window.setPanoramaLocation = setPanoramaLocation;
