@@ -32,40 +32,57 @@
             </div>
         </div>
 
-        <!-- Timer Display -->
-        <div class="timer-display" id="timer">2:00</div>
-
-        <!-- Panorama Viewer -->
-        <div class="panorama-container" id="panorama"></div>
-
-        <!-- Game Info Grid -->
-        <div class="game-info-grid">
-            <!-- Map Container -->
-            <div class="map-container" id="map"></div>
-
-            <!-- Game Info -->
-            <div class="game-info">
-                <div class="score-display" id="score">Total Score: 0</div>
-                <div class="round-display" id="round">Round: 1 / 5</div>
-                <div class="progress" id="timer-progress">
-                    <div class="progress-bar" style="width: 100%;"></div>
+        <!-- New Three-Column Layout -->
+        <div class="game-layout">
+            <!-- Left Column -->
+            <div class="game-column game-column-left">
+                <!-- Game Info -->
+                <div class="game-info">
+                    <div class="score-display" id="score">Total Score: 0</div>
+                    <div class="round-display" id="round">Round: 1 / 5</div>
+                    <div class="progress" id="timer-progress">
+                        <div class="progress-bar" style="width: 100%;"></div>
+                    </div>
                 </div>
+                
+                <!-- Result Display -->
+                <div id="result" style="display: none;"></div>
+                
+                <!-- Left Ad Space -->
+                <div class="ad-container ad-container-left">
+                    <!-- Ad content will go here -->
+                </div>
+                
+            </div>
+    
+            <!-- Center Column -->
+            <div class="game-column game-column-center">
+                <!-- Timer Display - Moved above panorama -->
+                <div class="timer-display" id="timer">2:00</div>
+                
+                <!-- Panorama Viewer -->
+                <div class="panorama-container" id="panorama"></div>
+                
+                <!-- Game Controls -->
+                <div class="game-controls">
+                    <button class="btn btn-primary" id="submit-guess">Submit Guess</button>
+                    <button class="btn btn-secondary" id="toggle-immersive-btn">Immersive Mode</button>
+                </div>
+                
+                <!-- Map Container -->
+                <div class="map-container" id="map"></div>
+                
+            </div>
+    
+            <!-- Right Column -->
+            <div class="game-column game-column-right">
+                <!-- Location Info -->
+                <div class="location-info" id="location-info" style="display: none;"></div>
+    
             </div>
         </div>
-
-        <!-- Game Controls -->
-        <div class="game-controls">
-            <button class="btn btn-primary" id="submit-guess">Submit Guess</button>
-            <button class="btn btn-secondary" id="toggle-immersive-btn">Immersive Mode</button>
-        </div>
-
-        <!-- Result Display -->
-        <div id="result" style="display: none;"></div>
-
-        <!-- Location Info -->
-        <div class="location-info" id="location-info" style="display: none;"></div>
-
-        <!-- Ad Space -->
+    
+        <!-- Bottom Ad Space -->
         <div class="ad-container">
             <!-- Ad content will go here -->
         </div>

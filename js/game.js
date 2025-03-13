@@ -301,17 +301,17 @@ function startTimer() {
         // Add visual effects when time is running low
         if (timeLeft <= 10 && timeLeft > 0) {
             if (timerElement) {
-                timerElement.classList.add('pulse');
+                timerElement.classList.add('time-low');
             }
             if (immersiveTimerElement) {
-                immersiveTimerElement.classList.add('pulse');
+                immersiveTimerElement.classList.add('time-low');
             }
         } else {
             if (timerElement) {
-                timerElement.classList.remove('pulse');
+                timerElement.classList.remove('time-low');
             }
             if (immersiveTimerElement) {
-                immersiveTimerElement.classList.remove('pulse');
+                immersiveTimerElement.classList.remove('time-low');
             }
         }
         
@@ -749,28 +749,56 @@ function resetGame(settings = {}) {
 
             <div class="timer-display" id="timer">2:00</div>
 
-            <div class="panorama-container" id="panorama"></div>
+            <!-- New Three-Column Layout -->
+            <div class="game-layout">
+                <!-- Left Column -->
+                <div class="game-column game-column-left">
+                    <!-- Map Container -->
+                    <div class="map-container" id="map"></div>
 
-            <div class="game-info-grid">
-                <div class="map-container" id="map"></div>
+                    <!-- Game Info -->
+                    <div class="game-info">
+                        <div class="score-display" id="score">Total Score: 0</div>
+                        <div class="round-display" id="round">Round: 1 / 5</div>
+                        <div class="progress" id="timer-progress">
+                            <div class="progress-bar" style="width: 100%;"></div>
+                        </div>
+                    </div>
 
-                <div class="game-info">
-                    <div class="score-display" id="score">Total Score: 0</div>
-                    <div class="round-display" id="round">Round: 1 / 5</div>
-                    <div class="progress" id="timer-progress">
-                        <div class="progress-bar" style="width: 100%;"></div>
+                    <!-- New Left Ad Space -->
+                    <div class="ad-container ad-container-left">
+                        <!-- Ad content will go here -->
+                    </div>
+                </div>
+
+                <!-- Center Column -->
+                <div class="game-column game-column-center">
+                    <!-- Panorama Viewer -->
+                    <div class="panorama-container" id="panorama"></div>
+                    
+                    <!-- Game Controls -->
+                    <div class="game-controls">
+                        <button class="btn btn-primary" id="submit-guess">Submit Guess</button>
+                        <button class="btn btn-secondary" id="toggle-immersive-btn" onclick="toggleImmersiveMode()">Immersive Mode</button>
+                    </div>
+
+                    <!-- Result Display -->
+                    <div id="result" style="display: none;"></div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="game-column game-column-right">
+                    <!-- Location Info (moved from below) -->
+                    <div class="location-info" id="location-info" style="display: none;"></div>
+
+                    <!-- New Right Ad Space -->
+                    <div class="ad-container ad-container-right">
+                        <!-- Ad content will go here -->
                     </div>
                 </div>
             </div>
 
-            <div class="game-controls">
-                <button class="btn btn-primary" id="submit-guess">Submit Guess</button>
-                <button class="btn btn-secondary" id="toggle-immersive-btn" onclick="toggleImmersiveMode()">Immersive Mode</button>
-            </div>
-
-            <div id="result" style="display: none;"></div>
-            <div id="location-info" style="display: none;"></div>
-            
+            <!-- Bottom Ad Space -->
             <div class="ad-container">
                 <!-- Ad content will go here -->
             </div>
@@ -863,3 +891,10 @@ window.setGameDifficulty = setGameDifficulty;
 window.setGameRegion = setGameRegion;
 window.setGameCategory = setGameCategory;
 window.resetGameSettings = resetGameSettings;
+
+// Expose currentLocationData to the window object for use in ui.js
+Object.defineProperty(window, 'currentLocationData', {
+    get: function() {
+        return currentLocationData;
+    }
+});

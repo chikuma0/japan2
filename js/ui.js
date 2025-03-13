@@ -95,6 +95,12 @@ function showResult(distance, score) {
         if (score > 4000) {
             showConfetti();
         }
+        
+        // Also show location info if available
+        // Use the currentLocationData from game.js
+        if (window.currentLocationData) {
+            showLocationInfo(window.currentLocationData, distance);
+        }
     } else {
         console.error("Result element not found");
     }
@@ -195,43 +201,72 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
                 </div>
             </div>
             
-            <div class="result-container" id="result-container">
-                <h2>Game Over!</h2>
-                <div class="result-card ${cardClass} pop">
-                    <h3 class="japanese-text">${assessment}</h3>
-                    <div class="score-display">
-                        <span>${totalScore} / ${maxPossibleScore}</span>
+            <div class="timer-display" id="timer">Game Over!</div>
+            
+            <!-- New Three-Column Layout -->
+            <div class="game-layout">
+                <!-- Left Column -->
+                <div class="game-column game-column-left">
+                    <!-- Game Info -->
+                    <div class="game-info">
+                        <div class="score-display">
+                            <span>${totalScore} / ${maxPossibleScore}</span>
+                        </div>
+                        <div class="badge badge-primary">${scorePercentage.toFixed(2)}%</div>
                     </div>
-                    <div class="badge badge-primary">${scorePercentage.toFixed(2)}%</div>
+                    
+                    <!-- Result Display -->
+                    <div class="result-container" id="result-container">
+                        <div class="result-card ${cardClass} pop">
+                            <h3 class="japanese-text">${assessment}</h3>
+                        </div>
+                        <p id="game-url">Play at: japan2.xyz</p>
+                    </div>
+                    
+                    <!-- Left Ad Space -->
+                    <div class="ad-container ad-container-left">
+                        <!-- Ad content will go here -->
+                    </div>
+                    
                 </div>
                 
-                ${visitedLocationsHTML}
+                <!-- Center Column -->
+                <div class="game-column game-column-center">
+                    ${visitedLocationsHTML}
+                    
+                    <div class="social-sharing">
+                        <button class="btn btn-primary btn-icon" id="share-result-btn">
+                            <span>Share Result</span>
+                        </button>
+                    </div>
+                    
+                    <div class="game-controls">
+                        <button class="btn btn-secondary" id="play-again-btn">Play Again</button>
+                    </div>
+                    
+                    <div class="game-options">
+                        <button class="btn btn-outline" id="easy-mode-btn">Easy Mode</button>
+                        <button class="btn btn-outline" id="hard-mode-btn">Hard Mode</button>
+                    </div>
+                    
+                </div>
                 
-                <p id="game-url">Play at: japan2.xyz</p>
+                <!-- Right Column -->
+                <div class="game-column game-column-right">
+                    <!-- Location Info -->
+                    <div class="location-info" id="location-info" style="display: none;"></div>
+                    
+                </div>
             </div>
             
-            <div class="social-sharing">
-                <button class="btn btn-primary btn-icon" id="share-result-btn">
-                    <span>Share Result</span>
-                </button>
-            </div>
-            
-            <div class="game-controls">
-                <button class="btn btn-secondary" id="play-again-btn">Play Again</button>
-            </div>
-            
-            <div class="game-options">
-                <button class="btn btn-outline" id="easy-mode-btn">Easy Mode</button>
-                <button class="btn btn-outline" id="hard-mode-btn">Hard Mode</button>
+            <!-- Bottom Ad Space -->
+            <div class="ad-container">
+                <!-- Ad content will go here -->
             </div>
             
             <!-- Create new result and score elements for the end game screen -->
             <div id="result" style="display: none;"></div>
             <div id="score" style="display: none;">Total Score: ${totalScore}</div>
-            
-            <div class="ad-container">
-                <!-- Ad content will go here -->
-            </div>
         `;
         
         // Clear the game container and add the end game content
@@ -438,6 +473,12 @@ function showLoadingIndicator() {
     const currentRound = document.getElementById("round")?.textContent;
     const isFirstRound = !currentRound || currentRound.includes("1 /");
     
+    // Show location info if available
+    if (window.currentLocationData) {
+        // Create a simplified version of location info without accuracy rating
+        showLoadingLocationInfo(window.currentLocationData);
+    }
+    
     // Use the journey animation for transitions between rounds
     if (!isFirstRound && window.journeyAnimation) {
         // Start the journey animation
@@ -484,6 +525,46 @@ function showLoadingIndicator() {
 }
 
 /**
+ * Show location information during loading
+ * @param {Object} locationData - Data about the current location
+ */
+function showLoadingLocationInfo(locationData) {
+    // Create or get location info element
+    let locationInfo = document.getElementById('location-info');
+    
+    if (!locationInfo) {
+        locationInfo = document.createElement('div');
+        locationInfo.id = 'location-info';
+        locationInfo.className = 'location-info';
+        
+        // Add to right column
+        const rightColumn = document.querySelector('.game-column-right');
+        if (rightColumn) {
+            // Insert at the beginning of the right column
+            rightColumn.insertBefore(locationInfo, rightColumn.firstChild);
+        }
+    }
+    
+    // Format location information without accuracy rating
+    locationInfo.innerHTML = `
+        <div class="card-header">
+            <h3>Location Info</h3>
+        </div>
+        <div class="card-body">
+            <p><strong>Name:</strong> ${locationData.name || 'Unknown location'}</p>
+            <p><strong>Region:</strong> <span class="badge badge-secondary">${locationData.region || 'Unknown region'}</span></p>
+            ${locationData.facts ? `<p><strong>Fun Fact:</strong> ${locationData.facts}</p>` : ''}
+        </div>
+    `;
+    
+    locationInfo.style.display = 'block';
+    
+    // Add pop animation
+    locationInfo.classList.add('pop');
+    setTimeout(() => locationInfo.classList.remove('pop'), 1500);
+}
+
+/**
  * Hide the loading indicator
  */
 function hideLoadingIndicator() {
@@ -499,6 +580,9 @@ function hideLoadingIndicator() {
     if (loadingIndicator) {
         loadingIndicator.style.display = 'none';
     }
+    
+    // Note: We intentionally don't hide the location info here
+    // as it should remain visible after loading is complete
 }
 
 /**
@@ -515,10 +599,17 @@ function showLocationInfo(locationData, distance) {
         locationInfo.id = 'location-info';
         locationInfo.className = 'location-info';
         
-        // Add to game container
-        const resultElement = document.getElementById('result');
-        if (resultElement) {
-            resultElement.parentNode.insertBefore(locationInfo, resultElement.nextSibling);
+        // Add to right column
+        const rightColumn = document.querySelector('.game-column-right');
+        if (rightColumn) {
+            // Insert at the beginning of the right column
+            rightColumn.insertBefore(locationInfo, rightColumn.firstChild);
+        } else {
+            // Fallback to old method if right column doesn't exist
+            const resultElement = document.getElementById('result');
+            if (resultElement) {
+                resultElement.parentNode.insertBefore(locationInfo, resultElement.nextSibling);
+            }
         }
     }
     
