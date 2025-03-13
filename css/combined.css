@@ -684,11 +684,12 @@ body {
 /* Header Section */
 .game-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center; /* Changed from space-between to center */
   align-items: center;
   padding: 10px 0 20px 0;
   border-bottom: 2px dashed var(--color-primary);
   margin-bottom: 20px;
+  position: relative; /* Added for proper layout flow */
 }
 
 .game-logo {
