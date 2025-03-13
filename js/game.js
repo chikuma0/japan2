@@ -458,8 +458,34 @@ function resetGame(settings = {}) {
     
     console.log("Game reset. Starting new game with round =", currentRound);
     
-    // Initialize the game again with settings
-    initGame(settings);
+    // We need to reinitialize the map and panorama before starting a new game
+    // This is done asynchronously to ensure the DOM elements are ready
+    setTimeout(() => {
+        try {
+            // Import modules dynamically
+            Promise.all([
+                import('./map.js'),
+                import('./panorama.js')
+            ]).then(([mapModule, panoramaModule]) => {
+                console.log("Reinitializing map and panorama");
+                
+                // Initialize map and panorama
+                window.map = mapModule.initializeMap();
+                window.panorama = panoramaModule.initializePanorama();
+                
+                // Initialize the game again with settings
+                initGame(settings);
+            }).catch(error => {
+                console.error("Error importing modules:", error);
+                // Still try to initialize the game even if there was an error
+                initGame(settings);
+            });
+        } catch (error) {
+            console.error("Error in resetGame:", error);
+            // Still try to initialize the game even if there was an error
+            initGame(settings);
+        }
+    }, 100); // Short delay to ensure DOM is ready
 }
 
 /**
