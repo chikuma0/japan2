@@ -258,6 +258,13 @@ function submitGuess() {
             return;
         }
         
+        // Also prevent processing if we're somehow on round 6 or higher
+        if (currentRound > 5) {
+            console.log("Invalid round number, resetting game");
+            resetGame();
+            return;
+        }
+        
         // Clear the timer
         if (timerInterval) {
             clearInterval(timerInterval);
@@ -307,8 +314,8 @@ function submitGuess() {
             showLocationInfo(currentLocationData, distance);
         }
         
-        // Check if this was the last round
-        if (currentRound >= maxRounds) {
+        // Check if this was the last round (round 5)
+        if (currentRound === maxRounds) {
             console.log(`Game complete! Final score: ${totalScore}`);
             // End the game immediately without setting up a new round
             endGame(totalScore, maxRounds, usedLocations);
