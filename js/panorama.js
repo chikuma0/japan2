@@ -71,19 +71,38 @@ function initializeFullscreenPanorama(position, pov, zoom) {
 function findStreetViewLocation(coordinates, callback) {
     const streetViewService = new google.maps.StreetViewService();
     
-    streetViewService.getPanorama({
-        location: coordinates,
-        radius: 50000, // Search within 50km
-        source: google.maps.StreetViewSource.OUTDOOR
-    }, (data, status) => {
-        if (status === 'OK') {
-            const location = data.location.latLng;
-            callback(location, null);
-        } else {
-            console.error('Street View data not found for this location.');
-            callback(null, new Error('No Street View found'));
-        }
-    });
+    // Try with a smaller radius first for more accurate results
+    const initialRadius = 5000; // 5km
+    const maxRadius = 50000; // 50km max
+    
+    // Try to find a panorama with increasing radius
+    tryFindPanorama(coordinates, initialRadius);
+    
+    function tryFindPanorama(coords, radius) {
+        console.log(`Searching for Street View within ${radius}m of ${coords.lat()}, ${coords.lng()}`);
+        
+        streetViewService.getPanorama({
+            location: coords,
+            radius: radius,
+            source: google.maps.StreetViewSource.OUTDOOR
+        }, (data, status) => {
+            if (status === 'OK') {
+                const location = data.location.latLng;
+                console.log(`Found Street View at ${location.lat()}, ${location.lng()}`);
+                callback(location, null);
+            } else {
+                // If not found and we haven't reached max radius, try with a larger radius
+                if (radius < maxRadius) {
+                    const newRadius = Math.min(radius * 2, maxRadius);
+                    console.log(`No Street View found within ${radius}m, trying ${newRadius}m`);
+                    tryFindPanorama(coords, newRadius);
+                } else {
+                    console.error('Street View data not found for this location.');
+                    callback(null, new Error('No Street View found'));
+                }
+            }
+        });
+    }
 }
 
 /**

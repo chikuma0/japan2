@@ -58,50 +58,69 @@ function setupNewRound() {
         resetMap();
         showLoadingIndicator();
         
-        // Get a random location from our curated database
-        const locationData = getRandomLocationFromDB();
-        currentLocationData = locationData;
-        
-        // Convert the coordinates to a LatLng object
-        const coordinates = new google.maps.LatLng(
-            locationData.coordinates.lat,
-            locationData.coordinates.lng
-        );
-        
-        console.log(`Round ${currentRound}: Selected location ${locationData.name}`);
-        
-        findStreetViewLocation(coordinates, (location, error) => {
-            if (error) {
-                console.error('Error finding Street View location:', error);
+        // Ensure panorama is initialized
+        if (!window.panorama) {
+            console.log("Panorama not initialized, initializing now");
+            import('./panorama.js').then(panoramaModule => {
+                window.panorama = panoramaModule.initializePanorama();
+                continueSetupRound();
+            }).catch(error => {
+                console.error("Error initializing panorama:", error);
                 handleStreetViewError();
-                return;
-            }
-            
-            hideLoadingIndicator();
-            actualLocation = location;
-            console.log('New round location:', location.lat(), location.lng());
-            console.log('Location data:', locationData.name, locationData.region);
-            
-            // Set the panorama to the new location with custom POV if available
-            if (locationData.pov) {
-                setPanoramaLocation(location, locationData.pov);
-            } else {
-                setPanoramaLocation(location);
-            }
-            
-            // Start the timer for this round
-            startTimer();
-            
-            // Enable the submit button
-            enableSubmitButton();
-            
-            // Reset retry count for next round
-            retryCount = 0;
-        });
+            });
+        } else {
+            continueSetupRound();
+        }
     } catch (error) {
         console.error('Error in setupNewRound:', error);
         handleStreetViewError();
     }
+}
+
+/**
+ * Continue setting up the round after ensuring panorama is initialized
+ */
+function continueSetupRound() {
+    // Get a random location from our curated database
+    const locationData = getRandomLocationFromDB();
+    currentLocationData = locationData;
+    
+    // Convert the coordinates to a LatLng object
+    const coordinates = new google.maps.LatLng(
+        locationData.coordinates.lat,
+        locationData.coordinates.lng
+    );
+    
+    console.log(`Round ${currentRound}: Selected location ${locationData.name}`);
+    
+    findStreetViewLocation(coordinates, (location, error) => {
+        if (error) {
+            console.error('Error finding Street View location:', error);
+            handleStreetViewError();
+            return;
+        }
+        
+        hideLoadingIndicator();
+        actualLocation = location;
+        console.log('New round location:', location.lat(), location.lng());
+        console.log('Location data:', locationData.name, locationData.region);
+        
+        // Set the panorama to the new location with custom POV if available
+        if (locationData.pov) {
+            setPanoramaLocation(location, locationData.pov);
+        } else {
+            setPanoramaLocation(location);
+        }
+        
+        // Start the timer for this round
+        startTimer();
+        
+        // Enable the submit button
+        enableSubmitButton();
+        
+        // Reset retry count for next round
+        retryCount = 0;
+    });
 }
 
 /**
@@ -167,9 +186,34 @@ function handleStreetViewError() {
     if (retryCount > 3) {
         // After 3 retries, show a message and move to the next location
         hideLoadingIndicator();
-        alert("Having trouble finding Street View data. Moving to a new location.");
+        console.log("Having trouble finding Street View data. Moving to a new location.");
+        
+        // Instead of an alert which blocks the UI, show a message in the panorama
+        const panoramaElement = document.getElementById("panorama");
+        if (panoramaElement) {
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'error-message';
+            errorMessage.innerHTML = `
+                <div class="card card-accent">
+                    <div class="card-body">
+                        <h3>Street View Not Available</h3>
+                        <p>Having trouble finding Street View data for this location.</p>
+                        <p>Moving to a new location in 3 seconds...</p>
+                    </div>
+                </div>
+            `;
+            panoramaElement.appendChild(errorMessage);
+            
+            // Remove the message after a delay
+            setTimeout(() => {
+                if (errorMessage.parentNode === panoramaElement) {
+                    panoramaElement.removeChild(errorMessage);
+                }
+            }, 3000);
+        }
+        
         retryCount = 0;
-        setupNewRound();
+        setTimeout(setupNewRound, 3000);
     } else {
         // Try again with a different location
         console.log(`Retry attempt ${retryCount}/3`);
@@ -243,18 +287,55 @@ function startTimer() {
  * Handle when time runs out for a round
  */
 function handleTimeUp() {
-    alert("Time's up! Moving to the next round.");
+    console.log("Time's up! Moving to the next round.");
+    
+    // Show a non-blocking message instead of an alert
+    const panoramaElement = document.getElementById("panorama");
+    if (panoramaElement) {
+        const timeUpMessage = document.createElement('div');
+        timeUpMessage.className = 'time-up-message';
+        timeUpMessage.innerHTML = `
+            <div class="card card-primary">
+                <div class="card-body">
+                    <h3>Time's Up!</h3>
+                    <p>Moving to the next round...</p>
+                </div>
+            </div>
+        `;
+        panoramaElement.appendChild(timeUpMessage);
+        
+        // Remove the message after a delay
+        setTimeout(() => {
+            if (timeUpMessage.parentNode === panoramaElement) {
+                panoramaElement.removeChild(timeUpMessage);
+            }
+        }, 3000);
+    }
+    
     submitGuess(); // This will handle submitting the current guess (or no guess) and moving to the next round
 }
+
+// Flag to prevent multiple submissions for the same round
+let isSubmitting = false;
 
 /**
  * Submit the current guess and calculate score
  */
 function submitGuess() {
     try {
+        // Prevent multiple submissions for the same round
+        if (isSubmitting) {
+            console.log("Already processing a submission, ignoring duplicate");
+            return;
+        }
+        
+        // Set the flag to prevent multiple submissions
+        isSubmitting = true;
+        
         // Prevent submitting after game is complete
         if (currentRound > maxRounds) {
             console.log("Game already complete, ignoring additional submissions");
+            isSubmitting = false;
             return;
         }
         
@@ -262,6 +343,7 @@ function submitGuess() {
         if (currentRound > 5) {
             console.log("Invalid round number, resetting game");
             resetGame();
+            isSubmitting = false;
             return;
         }
         
@@ -286,6 +368,7 @@ function submitGuess() {
             
             if (!actualLocation) {
                 console.error("actualLocation is not set");
+                isSubmitting = false;
                 return;
             }
             
@@ -317,17 +400,33 @@ function submitGuess() {
         // Check if this was the last round (round 5)
         if (currentRound === maxRounds) {
             console.log(`Game complete! Final score: ${totalScore}`);
-            // End the game immediately without setting up a new round
-            endGame(totalScore, maxRounds, usedLocations);
+            
+            // Reset the submission flag after a delay
+            setTimeout(() => {
+                isSubmitting = false;
+            }, 1000);
+            
+            // Delay ending the game to give the player time to see the final round result
+            console.log("Delaying end game to show final round result");
+            setTimeout(() => {
+                endGame(totalScore, maxRounds, usedLocations);
+            }, 7000); // Same delay as for showing location info
         } else {
             // Move to next round
             currentRound++;
             console.log(`Round completed. Moving to round ${currentRound} of ${maxRounds}`);
             updateRound(currentRound, maxRounds);
+            
+            // Reset the submission flag after a delay
+            setTimeout(() => {
+                isSubmitting = false;
+            }, 1000);
+            
             setTimeout(setupNewRound, 7000); // Increased delay to give players time to read location info
         }
     } catch (error) {
         console.error("Error in submitGuess function:", error);
+        isSubmitting = false;
     }
 }
 

@@ -111,6 +111,13 @@ function showResult(distance, score) {
 function endGame(totalScore, maxRounds, usedLocations = []) {
     console.log(`Ending game with totalScore=${totalScore}, maxRounds=${maxRounds}, usedLocations.length=${usedLocations.length}`);
     
+    // Clear any existing timers or intervals
+    const timerInterval = window.timerInterval;
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        window.timerInterval = null;
+    }
+    
     const maxPossibleScore = 5000 * maxRounds;
     const scorePercentage = (totalScore / maxPossibleScore) * 100;
     console.log(`Max possible score: ${maxPossibleScore}, Score percentage: ${scorePercentage.toFixed(2)}%`);
@@ -153,9 +160,25 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
         showConfetti(20); // Less confetti for medium scores
     }
     
+    // First, make sure any existing result and score elements are properly hidden
+    // to prevent "not found" errors when they're removed from the DOM
+    const existingResultElement = document.getElementById("result");
+    if (existingResultElement) {
+        existingResultElement.style.display = "none";
+    }
+    
+    const existingScoreElement = document.getElementById("score");
+    if (existingScoreElement) {
+        existingScoreElement.style.display = "none";
+    }
+    
+    // Now update the game container with the end game content
     const gameContainer = document.getElementById("game-container");
     if (gameContainer) {
-        gameContainer.innerHTML = `
+        // Create a new div to hold the end game content
+        const endGameContent = document.createElement('div');
+        endGameContent.className = 'end-game-content';
+        endGameContent.innerHTML = `
             <div class="game-header">
                 <div class="game-logo">
                     <h1>Japan-tsū</h1>
@@ -190,24 +213,57 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
             </div>
             
             <div class="social-sharing">
-                <button class="btn btn-primary btn-icon" onclick="shareResult()">
+                <button class="btn btn-primary btn-icon" id="share-result-btn">
                     <span>Share Result</span>
                 </button>
             </div>
             
             <div class="game-controls">
-                <button class="btn btn-secondary" onclick="resetGameGlobal()">Play Again</button>
+                <button class="btn btn-secondary" id="play-again-btn">Play Again</button>
             </div>
             
             <div class="game-options">
-                <button class="btn btn-outline" onclick="resetGameGlobal({difficulty: 'easy'})">Easy Mode</button>
-                <button class="btn btn-outline" onclick="resetGameGlobal({difficulty: 'hard'})">Hard Mode</button>
+                <button class="btn btn-outline" id="easy-mode-btn">Easy Mode</button>
+                <button class="btn btn-outline" id="hard-mode-btn">Hard Mode</button>
             </div>
+            
+            <!-- Create new result and score elements for the end game screen -->
+            <div id="result" style="display: none;"></div>
+            <div id="score" style="display: none;">Total Score: ${totalScore}</div>
             
             <div class="ad-container">
                 <!-- Ad content will go here -->
             </div>
         `;
+        
+        // Clear the game container and add the end game content
+        gameContainer.innerHTML = '';
+        gameContainer.appendChild(endGameContent);
+        
+        // Add event listeners to the buttons
+        document.getElementById('share-result-btn').addEventListener('click', function() {
+            if (window.shareResult) {
+                window.shareResult();
+            }
+        });
+        
+        document.getElementById('play-again-btn').addEventListener('click', function() {
+            if (window.resetGameGlobal) {
+                window.resetGameGlobal();
+            }
+        });
+        
+        document.getElementById('easy-mode-btn').addEventListener('click', function() {
+            if (window.resetGameGlobal) {
+                window.resetGameGlobal({difficulty: 'easy'});
+            }
+        });
+        
+        document.getElementById('hard-mode-btn').addEventListener('click', function() {
+            if (window.resetGameGlobal) {
+                window.resetGameGlobal({difficulty: 'hard'});
+            }
+        });
     } else {
         console.error("Game container element not found");
     }

@@ -106,16 +106,24 @@ function setupEventListeners() {
     // Add event listener to submit button
     const submitButton = document.getElementById('submit-guess');
     if (submitButton) {
-        submitButton.addEventListener('click', function() {
-            if (window.submitGuess) {
-                window.submitGuess();
-            } else {
-                console.error("submitGuess function not available yet");
-            }
-        });
+        // Remove any existing click listeners first to prevent double execution
+        submitButton.removeEventListener('click', submitGuessHandler);
+        
+        // Add the event listener with a named function so we can remove it later if needed
+        submitButton.addEventListener('click', submitGuessHandler);
         console.log("Submit button event listener added");
     } else {
         console.error("Submit button not found");
+    }
+    
+    // Handler function for submit button clicks
+    function submitGuessHandler() {
+        console.log("Submit button clicked (from event listener)");
+        if (window.submitGuess) {
+            window.submitGuess();
+        } else {
+            console.error("submitGuess function not available yet");
+        }
     }
     
     // Add event listener to toggle immersive mode button
