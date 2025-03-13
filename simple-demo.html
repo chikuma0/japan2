@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Japan-tsū Simple Demo</title>
+    <title>Japan-tsū Demo</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
@@ -38,6 +38,12 @@
             width: 100%;
             margin-bottom: 20px;
             border: 2px solid #33ff33;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #222;
+            color: #33ff33;
+            font-size: 14px;
         }
 
         #timer {
@@ -54,7 +60,7 @@
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
-            margin-bottom: 20px;
+            margin: 10px;
             image-rendering: pixelated;
             transition: background-color 0.3s;
         }
@@ -94,6 +100,7 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            box-sizing: border-box;
         }
 
         .card-title {
@@ -113,59 +120,151 @@
         }
 
         .instructions {
-            margin-top: 20px;
+            margin: 20px 0;
             font-size: 14px;
-            color: #999;
+            color: #33ff33;
+            background-color: #0a0a0a;
+            padding: 15px;
+            border: 2px solid #006400;
+            text-align: left;
+        }
+
+        .error-message {
+            background-color: #330000;
+            color: #ff3333;
+            padding: 15px;
+            margin: 20px 0;
+            border: 2px solid #ff0000;
+            text-align: left;
+        }
+
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .card {
+            width: 200px;
+            background-color: #1a1a1a;
+            border: 4px solid #33ff33;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #game-demo, #cards-demo {
+            margin-top: 30px;
+        }
+
+        .tab-buttons {
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <h1>Japan-tsū Simple Demo</h1>
+        <h1>Japan-tsū Demo</h1>
+        
+        <div class="error-message">
+            <h3>API Key Error</h3>
+            <p>The Google Maps API key is restricted to specific domains, and "japan2.xyz" is not in the allowed list.</p>
+            <p>Error: RefererNotAllowedMapError</p>
+            <p>To fix this issue, you need to update the Google Maps API key settings in the Google Cloud Console to allow "japan2.xyz" as an authorized referrer.</p>
+        </div>
+        
         <div class="instructions">
-            <p>This is a simplified demo of Japan-tsū to demonstrate the core functionality.</p>
-            <p>The full version requires configuring the Google Maps API key to allow localhost.</p>
+            <h3>How to Fix the API Key Issue:</h3>
+            <ol>
+                <li>Go to the <a href="https://console.cloud.google.com/google/maps-apis/credentials" style="color: #33ff33;">Google Cloud Console</a></li>
+                <li>Select your project</li>
+                <li>Find the API key used for this project</li>
+                <li>Click on "Edit API key"</li>
+                <li>Under "Application restrictions", select "HTTP referrers"</li>
+                <li>Add "japan2.xyz" and "*.japan2.xyz" to the allowed referrers</li>
+                <li>Click "Save"</li>
+            </ol>
         </div>
         
-        <div class="result-card">
-            <div class="card-title">日本地理マスター</div>
-            <div class="card-subtitle">NIHON CHIRI MASTER</div>
-            <div class="card-stars">★★★</div>
-            <div>90-100%</div>
+        <div class="tab-buttons">
+            <button onclick="showTab('game-demo')">Game Demo</button>
+            <button onclick="showTab('cards-demo')">Result Cards</button>
         </div>
         
-        <div class="result-card" style="display: none;">
-            <div class="card-title">日本通</div>
-            <div class="card-subtitle">NIHON-TSŪ</div>
-            <div class="card-stars">★★☆</div>
-            <div>70-89%</div>
+        <div id="game-demo">
+            <div id="timer">2:00</div>
+            
+            <div id="panorama">Street View Panorama (Requires API Key)</div>
+            <div id="map">Map (Requires API Key)</div>
+            
+            <button>Submit Guess</button>
+            
+            <div id="score">Total Score: 0</div>
+            <div id="round">Round: 1 / 5</div>
         </div>
         
-        <div class="result-card" style="display: none;">
-            <div class="card-title">地理オタク</div>
-            <div class="card-subtitle">CHIRI OTAKU</div>
-            <div class="card-stars">★☆☆</div>
-            <div>50-69%</div>
-        </div>
-        
-        <div class="result-card" style="display: none;">
-            <div class="card-title">旅行好き</div>
-            <div class="card-subtitle">RYOKŌ-ZUKI</div>
-            <div class="card-stars">★☆☆</div>
-            <div>30-49%</div>
-        </div>
-        
-        <div class="result-card" style="display: none;">
-            <div class="card-title">駅前迷子</div>
-            <div class="card-subtitle">EKIMAE MAIGO</div>
-            <div class="card-stars">☆☆☆</div>
-            <div>0-29%</div>
+        <div id="cards-demo" class="hidden">
+            <h2>Result Cards</h2>
+            <p>These cards are shown at the end of the game based on the player's score.</p>
+            
+            <div class="cards-container">
+                <div class="card">
+                    <div class="card-title">日本地理マスター</div>
+                    <div class="card-subtitle">NIHON CHIRI MASTER</div>
+                    <div class="card-stars">★★★</div>
+                    <div>90-100%</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">日本通</div>
+                    <div class="card-subtitle">NIHON-TSŪ</div>
+                    <div class="card-stars">★★☆</div>
+                    <div>70-89%</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">地理オタク</div>
+                    <div class="card-subtitle">CHIRI OTAKU</div>
+                    <div class="card-stars">★☆☆</div>
+                    <div>50-69%</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">旅行好き</div>
+                    <div class="card-subtitle">RYOKŌ-ZUKI</div>
+                    <div class="card-stars">★☆☆</div>
+                    <div>30-49%</div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">駅前迷子</div>
+                    <div class="card-subtitle">EKIMAE MAIGO</div>
+                    <div class="card-stars">☆☆☆</div>
+                    <div>0-29%</div>
+                </div>
+            </div>
         </div>
     </div>
     
     <script>
+        function showTab(tabId) {
+            // Hide all tabs
+            document.getElementById('game-demo').classList.add('hidden');
+            document.getElementById('cards-demo').classList.add('hidden');
+            
+            // Show the selected tab
+            document.getElementById(tabId).classList.remove('hidden');
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Simple demo loaded successfully');
+            console.log('Demo loaded successfully');
         });
     </script>
 </body>
