@@ -71,53 +71,107 @@ function setupNewRound() {
  * Continue setting up the round after ensuring panorama is initialized
  */
 function continueSetupRound() {
-    // Get a random location from our curated database
-    const locationData = getRandomLocationFromDB();
-    currentLocationData = locationData;
+    // Show loading indicator while we get a location
+    showLoadingIndicator();
     
-    // Convert the coordinates to a LatLng object
-    const coordinates = new google.maps.LatLng(
-        locationData.coordinates.lat,
-        locationData.coordinates.lng
-    );
-    
-    console.log(`Round ${currentRound}: Selected location ${locationData.name}`);
-    
-    findStreetViewLocation(coordinates, (location, error) => {
-        if (error) {
-            console.error('Error finding Street View location:', error);
-            handleStreetViewError();
-            return;
-        }
+    // Get a random location from our database or generator
+    getRandomLocationFromDB().then(locationData => {
+        currentLocationData = locationData;
         
-        hideLoadingIndicator();
-        actualLocation = location;
-        console.log('New round location:', location.lat(), location.lng());
-        console.log('Location data:', locationData.name, locationData.region);
+        // Convert the coordinates to a LatLng object
+        const coordinates = new google.maps.LatLng(
+            locationData.coordinates.lat,
+            locationData.coordinates.lng
+        );
         
-        // Set the panorama to the new location with custom POV if available
-        if (locationData.pov) {
-            setPanoramaLocation(location, locationData.pov);
-        } else {
-            setPanoramaLocation(location);
-        }
+        console.log(`Round ${currentRound}: Selected location ${locationData.name}`);
         
-        // Start the timer for this round
-        startTimer();
-        
-        // Enable the submit button
-        enableSubmitButton();
-        
-        // Reset retry count for next round
-        retryCount = 0;
+        findStreetViewLocation(coordinates, (location, error) => {
+            if (error) {
+                console.error('Error finding Street View location:', error);
+                handleStreetViewError();
+                return;
+            }
+            
+            hideLoadingIndicator();
+            
+            // Store both the original coordinates and the actual panorama location
+            const originalCoordinates = new google.maps.LatLng(
+                locationData.coordinates.lat,
+                locationData.coordinates.lng
+            );
+            
+            // Use the panorama location for both the panorama and the actual location marker
+            actualLocation = location;
+            console.log('Original coordinates:', locationData.coordinates.lat, locationData.coordinates.lng);
+            console.log('Panorama location:', location.lat(), location.lng());
+            console.log('Location data:', locationData.name, locationData.region);
+            
+            // Set the panorama to the new location with custom POV if available
+            if (locationData.pov) {
+                setPanoramaLocation(location, locationData.pov);
+            } else {
+                setPanoramaLocation(location);
+            }
+            
+            // Start the timer for this round
+            startTimer();
+            
+            // Enable the submit button
+            enableSubmitButton();
+            
+            // Reset retry count for next round
+            retryCount = 0;
+        });
+    }).catch(error => {
+        console.error('Error getting random location:', error);
+        handleStreetViewError();
     });
 }
 
 /**
- * Get a random location from the database that hasn't been used yet
+ * Get a random location from the database or generate a new one
+ * @returns {Object} A location object
+ */
+async function getRandomLocationFromDB() {
+    // Check if we should use the generator or the database
+    const useGenerator = Math.random() < 0.7; // 70% chance to use generator
+    
+    if (useGenerator && typeof getRandomGeneratedLocation === 'function') {
+        try {
+            console.log('Using location generator to create a new location');
+            
+            // Create filters based on game settings
+            const filters = {
+                difficulty: gameSettings.difficulty,
+                region: gameSettings.region,
+                category: gameSettings.category
+            };
+            
+            // Get a generated location
+            const location = await getRandomGeneratedLocation(filters);
+            
+            // Add to used locations
+            usedLocations.push(location);
+            
+            return location;
+        } catch (error) {
+            console.error('Error generating location:', error);
+            console.log('Falling back to database locations');
+            // Fall back to database if generation fails
+            return getRandomLocationFromDatabase();
+        }
+    } else {
+        // Use the existing database
+        return getRandomLocationFromDatabase();
+    }
+}
+
+/**
+ * Get a random location from the static database
  * @returns {Object} A location object from the database
  */
-function getRandomLocationFromDB() {
+function getRandomLocationFromDatabase() {
     // Filter out already used locations
     let availableLocations = LOCATIONS_DB.filter(loc =>
         !usedLocations.some(used =>
@@ -278,6 +332,12 @@ function startTimer() {
  */
 function handleTimeUp() {
     console.log("Time's up! Moving to the next round.");
+    
+    // Check if we're in immersive mode and exit if necessary
+    if (window.isImmersiveMode) {
+        console.log("Exiting immersive mode before proceeding to next round");
+        toggleImmersiveMode();
+    }
     
     // Show a non-blocking message instead of an alert
     const panoramaElement = document.getElementById("panorama");

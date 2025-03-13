@@ -123,6 +123,18 @@ function setupEventListeners() {
             }
         });
     }
+    
+    // Add event listener to back to guess button
+    const backToGuessButton = document.getElementById('back-to-guess');
+    if (backToGuessButton) {
+        backToGuessButton.addEventListener('click', function() {
+            if (typeof toggleImmersiveMode === 'function') {
+                toggleImmersiveMode();
+            } else {
+                console.error("toggleImmersiveMode function not available yet");
+            }
+        });
+    }
 }
 
 // Set up event listeners when the DOM is loaded
