@@ -244,10 +244,7 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
                         <button class="btn btn-secondary" id="play-again-btn">Play Again</button>
                     </div>
                     
-                    <div class="game-options">
-                        <button class="btn btn-outline" id="easy-mode-btn">Easy Mode</button>
-                        <button class="btn btn-outline" id="hard-mode-btn">Hard Mode</button>
-                    </div>
+                    <!-- Game options simplified for cleaner UI -->
                     
                 </div>
                 
@@ -286,17 +283,7 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
             }
         });
         
-        document.getElementById('easy-mode-btn').addEventListener('click', function() {
-            if (window.resetGameGlobal) {
-                window.resetGameGlobal({difficulty: 'easy'});
-            }
-        });
-        
-        document.getElementById('hard-mode-btn').addEventListener('click', function() {
-            if (window.resetGameGlobal) {
-                window.resetGameGlobal({difficulty: 'hard'});
-            }
-        });
+        // Difficulty selection removed to streamline experience
     } else {
         console.error("Game container element not found");
     }

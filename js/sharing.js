@@ -7,6 +7,73 @@
  * Uses the Web Share API if available, with fallback options
  */
 function shareResult() {
+    // Check if enhanced sharing is available
+    if (window.shareEnhancedResult) {
+        try {
+            // Get game data - try multiple selectors to find the score
+            let totalScore = 0;
+            
+            // Try different selectors to find the score
+            const selectors = [
+                '#result-container .score-display span',
+                '.score-display span',
+                '.score-display',
+                '.result-card .score-display',
+                '.game-info .score-display'
+            ];
+            
+            for (const selector of selectors) {
+                const element = document.querySelector(selector);
+                if (element && element.textContent) {
+                    const match = element.textContent.match(/(\d+)/);
+                    if (match && match[1]) {
+                        totalScore = parseInt(match[1]);
+                        console.log(`Found score ${totalScore} using selector: ${selector}`);
+                        break;
+                    }
+                }
+            }
+            
+            // If we still don't have a score, try to get it from the global variable
+            if (totalScore === 0 && typeof window.totalScore === 'number') {
+                totalScore = window.totalScore;
+                console.log(`Using global totalScore: ${totalScore}`);
+            }
+            
+            const maxPossibleScore = 5000 * 5; // 5000 points possible per round, 5 rounds
+            
+            // Get locations and guesses from the game
+            let usedLocations = window.usedLocations || [];
+            const guessPositions = window.guessPositions || [];
+            
+            // If no locations found, try to get them from the DOM
+            if (usedLocations.length === 0) {
+                const visitedItems = document.querySelectorAll('.visited-locations li');
+                if (visitedItems && visitedItems.length > 0) {
+                    usedLocations = Array.from(visitedItems).map(item => {
+                        const name = item.textContent.trim().split('\n')[0].trim();
+                        const region = item.querySelector('.badge') ?
+                            item.querySelector('.badge').textContent.trim() : '';
+                        return {
+                            name: name,
+                            region: region,
+                            coordinates: { lat: 0, lng: 0 } // We don't have coordinates from DOM
+                        };
+                    });
+                    console.log(`Found ${usedLocations.length} locations from DOM`);
+                }
+            }
+            
+            // Use enhanced sharing
+            window.shareEnhancedResult(totalScore, maxPossibleScore, usedLocations, guessPositions);
+            return;
+        } catch (error) {
+            console.error("Error using enhanced sharing:", error);
+            // Fall back to original sharing method
+        }
+    }
+    
+    // Original sharing implementation as fallback
     const resultContainer = document.getElementById('result-container');
     if (!resultContainer) {
         console.error("Result container not found");

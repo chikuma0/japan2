@@ -9,6 +9,7 @@ let currentRound = 1; // Always start from round 1
 const maxRounds = 5;  // Always play 5 rounds
 let timerInterval;
 let usedLocations = [];
+let guessPositions = []; // Track player guesses for sharing
 let currentLocationData = null;
 let retryCount = 0;
 let gameSettings = {
@@ -16,6 +17,17 @@ let gameSettings = {
     region: null,     // null means all regions
     category: null    // null means all categories
 };
+
+// Make game state variables available globally for sharing
+window.guessPositions = guessPositions;
+window.usedLocations = usedLocations;
+
+// Expose totalScore to window for sharing
+Object.defineProperty(window, 'totalScore', {
+    get: function() {
+        return totalScore;
+    }
+});
 
 /**
  * Initialize the game
@@ -27,6 +39,7 @@ function initGame(settings = {}) {
     totalScore = 0;
     currentRound = 1;
     usedLocations = [];
+    guessPositions = []; // Reset guess positions
     retryCount = 0;
     
     // Apply any provided settings
@@ -172,6 +185,22 @@ async function getRandomLocationFromDB() {
  * @returns {Object} A location object from the database
  */
 function getRandomLocationFromDatabase() {
+    // For first-time players on first round, try to get a beginner-friendly location
+    if (currentRound === 1 && window.getBeginnerFriendlyLocation && !localStorage.getItem('japan-tsu-played')) {
+        const beginnerLocation = window.getBeginnerFriendlyLocation(LOCATIONS_DB);
+        if (beginnerLocation) {
+            console.log('Using beginner-friendly location for first-time player');
+            usedLocations.push(beginnerLocation);
+            
+            // Show first-time hint
+            if (window.addFirstTimeHint) {
+                setTimeout(window.addFirstTimeHint, 2000);
+            }
+            
+            return beginnerLocation;
+        }
+    }
+    
     // Filter out already used locations
     let availableLocations = LOCATIONS_DB.filter(loc =>
         !usedLocations.some(used =>
@@ -413,6 +442,9 @@ function submitGuess() {
             guessLocation = null;
             distance = 2000; // Max distance
             score = 0;
+            
+            // Record null for this round's guess
+            guessPositions.push(null);
         } else {
             guessLocation = guessMarker.getPosition();
             
@@ -424,6 +456,9 @@ function submitGuess() {
             
             console.log("Actual location in submitGuess:", actualLocation.lat(), actualLocation.lng());
             console.log("Guess location:", guessLocation.lat(), guessLocation.lng());
+            
+            // Record this round's guess position
+            guessPositions.push(guessLocation);
             
             distance = google.maps.geometry.spherical.computeDistanceBetween(guessLocation, actualLocation) / 1000; // Convert to km
             score = calculateScore(distance);
@@ -742,9 +777,7 @@ function resetGame(settings = {}) {
                         </div>
                     </div>
                 </div>
-                <div class="game-settings">
-                    <button class="btn btn-sm btn-outline" id="settings-button">Settings</button>
-                </div>
+                <!-- Game settings removed to streamline UI -->
             </div>
 
             <div class="timer-display" id="timer">2:00</div>

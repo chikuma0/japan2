@@ -34,8 +34,16 @@ window.initMap = function() {
             toggleMapButton.addEventListener('click', handleToggleMap);
         }
         
-        // Initialize the game
-        initGame();
+        // Check if this is the first visit
+        const isFirstVisit = !localStorage.getItem('japan-tsu-played');
+        
+        if (isFirstVisit && window.showTutorial) {
+            // Show tutorial for first-time players
+            window.showTutorial();
+        } else {
+            // Initialize the game directly for returning players
+            initGame();
+        }
         
         // Check if all required elements exist
         checkElements();
