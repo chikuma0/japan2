@@ -421,17 +421,8 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
                 <div class="game-header">
                     <div class="game-logo">
                         <h1 style="color: var(--color-primary); text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);">Japan-tsū</h1>
-                        <div class="mascot mascot-sm">
-                            <div class="japan-mascot">
-                                <div class="mascot-face">
-                                    <div class="mascot-eyes">
-                                        <div class="mascot-eye"></div>
-                                        <div class="mascot-eye"></div>
-                                    </div>
-                                    <div class="mascot-blush"></div>
-                                    <div class="mascot-mouth"></div>
-                                </div>
-                            </div>
+                        <div class="mascot mascot-sm kintaro-mascot" id="kintaro-mascot-endgame">
+                            <!-- SVG will be inserted here via JavaScript -->
                         </div>
                     </div>
                 </div>
@@ -607,17 +598,8 @@ function showLoadingIndicator() {
             
             // Add mascot and loading message
             loadingIndicator.innerHTML = `
-                <div class="mascot mascot-sm">
-                    <div class="japan-mascot">
-                        <div class="mascot-face">
-                            <div class="mascot-eyes">
-                                <div class="mascot-eye"></div>
-                                <div class="mascot-eye"></div>
-                            </div>
-                            <div class="mascot-blush"></div>
-                            <div class="mascot-mouth"></div>
-                        </div>
-                    </div>
+                <div class="mascot mascot-sm kintaro-mascot" id="kintaro-mascot-loading">
+                    <!-- SVG will be inserted here via JavaScript -->
                 </div>
                 <div class="loading-spinner"></div>
                 <p>${isLastRound ? 'Preparing final results...' : isTransitioningToLastRound ? 'Preparing final location...' : 'Finding a cool spot in Japan...'}</p>
