@@ -319,36 +319,56 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
     
     console.log(`Card class: ${cardClass}`);
     
-    // Generate a list of visited locations
+    // Generate a list of visited locations with enhanced styling
     let visitedLocationsHTML = '';
     if (usedLocations && usedLocations.length > 0) {
         visitedLocationsHTML = `
             <div class="visited-locations">
-                <h3>Places You Visited</h3>
-                <ul>
-                    ${usedLocations.map(loc => `
-                        <li>
-                            <span class="location-icon">🗾</span>
-                            ${loc.name || 'Unknown location'}
-                            <span class="badge badge-secondary">${loc.region || 'Unknown region'}</span>
-                        </li>
+                <h3 style="color: var(--color-primary); margin-bottom: 15px; font-size: 1.5rem;">Your Japan Journey</h3>
+                <div class="location-grid" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                    ${usedLocations.map((loc, index) => `
+                        <div class="location-card" style="background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+                                                         border-radius: 10px;
+                                                         padding: 12px;
+                                                         width: 150px;
+                                                         box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+                                                         animation: fadeIn 0.5s ${0.1 * index}s both;
+                                                         transition: all 0.3s ease;">
+                            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                                <span class="location-number" style="background-color: var(--color-primary);
+                                                                    color: white;
+                                                                    width: 24px;
+                                                                    height: 24px;
+                                                                    border-radius: 50%;
+                                                                    display: flex;
+                                                                    align-items: center;
+                                                                    justify-content: center;
+                                                                    margin-right: 8px;
+                                                                    font-size: 12px;
+                                                                    font-weight: bold;">${index + 1}</span>
+                                <span class="location-name" style="font-weight: bold; color: #333; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${loc.name || 'Unknown location'}</span>
+                            </div>
+                            <span class="badge badge-secondary" style="display: inline-block; width: 100%; text-align: center; margin-top: 5px;">${loc.region || 'Unknown region'}</span>
+                        </div>
                     `).join('')}
-                </ul>
+                </div>
             </div>
         `;
     }
     
-    // Show confetti for good scores
+    // Show confetti for all scores, but with different amounts and colors based on score
     if (scorePercentage > 70) {
-        showConfetti(50); // More confetti for high scores
+        showConfetti(100, true); // More confetti with special effects for high scores
     } else if (scorePercentage > 50) {
-        showConfetti(20); // Less confetti for medium scores
+        showConfetti(50, true); // Medium amount of confetti with special effects
+    } else {
+        showConfetti(30, false); // Basic confetti for lower scores
     }
     
     // Create end game overlay for immersive mode
     const immersiveView = document.getElementById('immersive-view');
     if (immersiveView) {
-        // Create end game overlay
+        // Create end game overlay with animation
         const endGameOverlay = document.createElement('div');
         endGameOverlay.className = 'end-game-overlay';
         endGameOverlay.style.position = 'absolute';
@@ -363,13 +383,71 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
         endGameOverlay.style.justifyContent = 'center';
         endGameOverlay.style.alignItems = 'center';
         endGameOverlay.style.padding = '20px';
+        endGameOverlay.style.opacity = '0';
+        endGameOverlay.style.animation = 'fadeIn 0.8s forwards';
+        
+        // Add keyframe animation for fade in
+        const fadeInStyle = document.createElement('style');
+        fadeInStyle.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            
+            @keyframes slideInUp {
+                from { transform: translateY(50px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+            
+            @keyframes glow {
+                0% { box-shadow: 0 0 5px rgba(255, 117, 171, 0.5); }
+                50% { box-shadow: 0 0 20px rgba(255, 117, 171, 0.8); }
+                100% { box-shadow: 0 0 5px rgba(255, 117, 171, 0.5); }
+            }
+            
+            @keyframes rotateIn {
+                from { transform: rotate(-10deg) scale(0.8); opacity: 0; }
+                to { transform: rotate(0) scale(1); opacity: 1; }
+            }
+            
+            .end-game-content {
+                animation: slideInUp 0.8s forwards;
+            }
+            
+            .result-card {
+                animation: rotateIn 1s 0.5s both, glow 2s 1.5s infinite;
+            }
+            
+            .score-display {
+                animation: slideInUp 0.8s 0.3s both;
+            }
+            
+            .visited-locations {
+                animation: slideInUp 0.8s 0.6s both;
+            }
+            
+            .game-controls {
+                animation: slideInUp 0.8s 0.9s both;
+            }
+            
+            .game-logo h1 {
+                animation: pulse 2s infinite;
+            }
+        `;
+        document.head.appendChild(fadeInStyle);
         
         // Create end game content
         endGameOverlay.innerHTML = `
-            <div class="end-game-content" style="background-color: white; border-radius: 20px; padding: 30px; max-width: 800px; width: 90%; text-align: center;">
+            <div class="end-game-content" style="background-color: white; border-radius: 20px; padding: 30px; max-width: 800px; width: 90%; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);">
                 <div class="game-header">
                     <div class="game-logo">
-                        <h1>Japan-tsū</h1>
+                        <h1 style="color: var(--color-primary); text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);">Japan-tsū</h1>
                         <div class="mascot mascot-sm">
                             <div class="japan-mascot">
                                 <div class="mascot-face">
@@ -385,24 +463,35 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
                     </div>
                 </div>
                 
-                <h2>Game Over!</h2>
+                <h2 style="color: var(--color-primary); font-size: 2.5rem; margin: 10px 0; text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);">Game Complete!</h2>
                 
-                <div class="score-display" style="font-size: 24px; margin: 20px 0;">
+                <div class="score-display" style="font-size: 28px; margin: 20px 0; font-weight: bold; color: #333;">
                     <span>${totalScore} / ${maxPossibleScore}</span>
-                    <div class="badge badge-primary" style="font-size: 18px; margin-left: 10px;">${scorePercentage.toFixed(2)}%</div>
+                    <div class="badge badge-primary" style="font-size: 20px; margin-left: 10px; padding: 5px 10px;">${scorePercentage.toFixed(2)}%</div>
                 </div>
                 
-                <div class="result-card ${cardClass}" style="width: 300px; height: 300px; margin: 0 auto 20px auto; border-radius: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;">
-                    <h3 class="japanese-text">${assessment}</h3>
+                <div class="result-card ${cardClass}" style="width: 300px; height: 400px; margin: 0 auto 20px auto; border-radius: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 60px; background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); color: white; display: flex; justify-content: center; align-items: center; font-weight: bold;">
+                        JAPAN EXPERTISE
+                    </div>
+                    <div style="margin-top: 70px; text-align: center;">
+                        <h3 class="japanese-text" style="font-size: 1.8rem; margin-bottom: 10px;">${assessment}</h3>
+                        <div style="width: 150px; height: 150px; margin: 15px auto; background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%), url('images/japan-map.svg') center/contain no-repeat;"></div>
+                        <div style="font-size: 1.2rem; margin-top: 10px; color: #666;">
+                            ${scorePercentage >= 70 ? 'Outstanding knowledge!' :
+                              scorePercentage >= 50 ? 'Great effort!' :
+                              'Keep exploring Japan!'}
+                        </div>
+                    </div>
                 </div>
                 
                 ${visitedLocationsHTML}
                 
                 <div class="game-controls" style="margin-top: 30px;">
-                    <button class="btn btn-primary btn-icon" id="share-result-btn" style="margin-right: 15px;">
+                    <button class="btn btn-primary btn-icon" id="share-result-btn" style="margin-right: 15px; padding: 12px 24px; font-size: 1.1rem; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); transition: all 0.3s ease;">
                         <span>Share Result</span>
                     </button>
-                    <button class="btn btn-secondary" id="play-again-btn">Play Again</button>
+                    <button class="btn btn-secondary" id="play-again-btn" style="padding: 12px 24px; font-size: 1.1rem; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); transition: all 0.3s ease;">Play Again</button>
                 </div>
             </div>
         `;
@@ -668,8 +757,9 @@ function showLocationInfo(locationData, distance) {
 /**
  * Show confetti animation for celebrations
  * @param {number} count - Number of confetti pieces to create (default: 30)
+ * @param {boolean} specialEffects - Whether to add special effects (default: false)
  */
-function showConfetti(count = 30) {
+function showConfetti(count = 30, specialEffects = false) {
     const confettiContainer = document.getElementById('confetti-container');
     if (!confettiContainer) return;
     
@@ -685,38 +775,115 @@ function showConfetti(count = 30) {
         confetti.style.left = `${Math.random() * 100}%`;
         confetti.style.top = `-20px`;
         
-        // Random size
-        const size = Math.random() * 10 + 5;
+        // Random size - larger for special effects
+        const size = specialEffects ?
+            Math.random() * 15 + 8 : // Larger confetti for special effects
+            Math.random() * 10 + 5;  // Regular size
         confetti.style.width = `${size}px`;
         confetti.style.height = `${size}px`;
         
-        // Random color
-        const colors = [
+        // Random color - more vibrant for special effects
+        let colors = [
             'var(--color-primary)',
             'var(--color-secondary)',
             'var(--color-accent)',
             'var(--color-primary-light)',
             'var(--color-secondary-light)'
         ];
-        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        
+        // Add gold and silver for special effects
+        if (specialEffects) {
+            colors = colors.concat([
+                'gold',
+                'silver',
+                '#FFD700', // Gold
+                '#FF1493', // Deep pink
+                '#00FFFF', // Cyan
+                '#7FFF00'  // Chartreuse
+            ]);
+            
+            // Add glitter effect for some confetti
+            if (Math.random() > 0.7) {
+                confetti.style.boxShadow = '0 0 10px 2px white';
+                confetti.style.background = 'radial-gradient(circle, white, ' +
+                    colors[Math.floor(Math.random() * colors.length)] + ')';
+            } else {
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            }
+        } else {
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        // Random shape for special effects
+        if (specialEffects && Math.random() > 0.7) {
+            const shapes = ['circle', 'star', 'heart'];
+            const shape = shapes[Math.floor(Math.random() * shapes.length)];
+            
+            if (shape === 'circle') {
+                confetti.style.borderRadius = '50%';
+            } else if (shape === 'star') {
+                confetti.style.clipPath = 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)';
+            } else if (shape === 'heart') {
+                confetti.style.clipPath = 'path("M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z")';
+            }
+        }
         
         // Random rotation
         confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
         
-        // Random animation duration
-        confetti.style.animationDuration = `${Math.random() * 2 + 2}s`;
+        // Random animation duration - more varied for special effects
+        const duration = specialEffects ?
+            Math.random() * 3 + 2 : // Longer duration for special effects
+            Math.random() * 2 + 2;  // Regular duration
+        confetti.style.animationDuration = `${duration}s`;
         
         // Random delay
-        confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+        confetti.style.animationDelay = `${Math.random() * 0.8}s`;
         
         // Add to container
         confettiContainer.appendChild(confetti);
     }
     
-    // Remove confetti after animation completes
+    // Add celebratory text for special effects
+    if (specialEffects) {
+        const celebrationText = document.createElement('div');
+        celebrationText.className = 'celebration-text';
+        celebrationText.textContent = 'AMAZING!';
+        celebrationText.style.position = 'absolute';
+        celebrationText.style.top = '40%';
+        celebrationText.style.left = '50%';
+        celebrationText.style.transform = 'translate(-50%, -50%) scale(0)';
+        celebrationText.style.fontSize = '5rem';
+        celebrationText.style.fontWeight = 'bold';
+        celebrationText.style.color = 'gold';
+        celebrationText.style.textShadow = '0 0 10px rgba(255, 215, 0, 0.7)';
+        celebrationText.style.zIndex = '9999';
+        celebrationText.style.opacity = '0';
+        celebrationText.style.animation = 'celebration-text 1.5s ease-out forwards';
+        
+        // Add keyframe animation for the text
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes celebration-text {
+                0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+                70% { transform: translate(-50%, -50%) scale(0.9); opacity: 1; }
+                100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        confettiContainer.appendChild(celebrationText);
+        
+        // Remove the style element after animation completes
+        setTimeout(() => {
+            document.head.removeChild(style);
+        }, 2000);
+    }
+    
+    // Remove confetti after animation completes - longer for special effects
     setTimeout(() => {
         confettiContainer.innerHTML = '';
-    }, 4000);
+    }, specialEffects ? 6000 : 4000);
 }
 
 /**

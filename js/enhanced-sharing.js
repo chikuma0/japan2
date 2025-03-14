@@ -11,79 +11,132 @@
  * @returns {Promise<HTMLElement>} The share card element
  */
 async function createShareCard(totalScore, maxPossibleScore, usedLocations, guessPositions) {
-    // Create container for the share card
+    // Create container for the share card - now vertical like a trading card
     const shareCard = document.createElement('div');
     shareCard.className = 'share-card';
-    shareCard.style.width = '600px';
-    shareCard.style.height = '315px'; // Twitter card size
+    shareCard.style.width = '400px';
+    shareCard.style.height = '600px'; // Vertical trading card format
     shareCard.style.position = 'relative';
     shareCard.style.backgroundColor = '#FFF0F5';
-    shareCard.style.borderRadius = '12px';
+    shareCard.style.borderRadius = '20px';
     shareCard.style.overflow = 'hidden';
-    shareCard.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
+    shareCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.2)';
     shareCard.style.fontFamily = 'Varela Round, sans-serif';
+    shareCard.style.border = '10px solid white';
     
-    // Add game logo and branding
+    // Add game logo and branding - trading card style header
     const header = document.createElement('div');
-    header.style.padding = '15px';
+    header.style.padding = '20px 15px';
     header.style.background = 'linear-gradient(135deg, #FF75AB, #FF9AC1)';
     header.style.color = 'white';
     header.style.display = 'flex';
-    header.style.justifyContent = 'space-between';
+    header.style.flexDirection = 'column';
     header.style.alignItems = 'center';
+    header.style.textAlign = 'center';
+    header.style.borderBottom = '2px solid rgba(255, 255, 255, 0.3)';
     
     header.innerHTML = `
-        <div style="display: flex; align-items: center;">
-            <h2 style="margin: 0; font-size: 24px;">Japan-tsū</h2>
-            <div style="width: 30px; height: 30px; margin-left: 10px; background-color: #FF9AC1; border-radius: 50%; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 30%; left: 50%; transform: translateX(-50%); width: 60%; height: 40%; display: flex; justify-content: space-between;">
-                    <div style="width: 5px; height: 5px; background-color: #333; border-radius: 50%;"></div>
-                    <div style="width: 5px; height: 5px; background-color: #333; border-radius: 50%;"></div>
-                </div>
-                <div style="position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); width: 30%; height: 10%; border-bottom: 2px solid #333; border-radius: 50%;"></div>
-            </div>
+        <div style="position: absolute; top: 10px; right: 10px; font-size: 12px; background-color: rgba(255, 255, 255, 0.3); padding: 3px 8px; border-radius: 10px;">japan2.xyz</div>
+        <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 10px;">
+            <h2 style="margin: 0; font-size: 32px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);">Japan-tsū</h2>
+            <div style="font-size: 14px; margin-top: 5px; letter-spacing: 1px;">EXPERTISE CARD</div>
         </div>
-        <div style="font-size: 14px;">japan2.xyz</div>
+        <div style="width: 80px; height: 80px; margin: 10px 0; background-color: #FF9AC1; border-radius: 50%; position: relative; overflow: hidden; border: 3px solid white; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
+            <div style="position: absolute; top: 30%; left: 50%; transform: translateX(-50%); width: 60%; height: 40%; display: flex; justify-content: space-between;">
+                <div style="width: 8px; height: 8px; background-color: #333; border-radius: 50%;"></div>
+                <div style="width: 8px; height: 8px; background-color: #333; border-radius: 50%;"></div>
+            </div>
+            <div style="position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); width: 30%; height: 10%; border-bottom: 3px solid #333; border-radius: 50%;"></div>
+        </div>
     `;
     
     shareCard.appendChild(header);
     
-    // Add score section
+    // Add score section - trading card style
     const scoreSection = document.createElement('div');
-    scoreSection.style.padding = '15px';
+    scoreSection.style.padding = '25px 15px';
     scoreSection.style.display = 'flex';
-    scoreSection.style.justifyContent = 'space-between';
+    scoreSection.style.flexDirection = 'column';
     scoreSection.style.alignItems = 'center';
+    scoreSection.style.textAlign = 'center';
+    scoreSection.style.backgroundColor = 'white';
     
     const scorePercentage = (totalScore / maxPossibleScore) * 100;
     const expertise = getJapaneseLevel(scorePercentage);
     
+    // Determine card rarity based on score
+    let rarityLabel = 'COMMON';
+    let rarityColor = '#6c757d';
+    
+    if (scorePercentage >= 90) {
+        rarityLabel = 'LEGENDARY';
+        rarityColor = 'gold';
+    } else if (scorePercentage >= 70) {
+        rarityLabel = 'RARE';
+        rarityColor = '#FF75AB';
+    } else if (scorePercentage >= 50) {
+        rarityLabel = 'UNCOMMON';
+        rarityColor = '#17a2b8';
+    }
+    
     scoreSection.innerHTML = `
-        <div>
-            <div style="font-size: 36px; font-weight: bold; color: #FF75AB;">${totalScore}</div>
-            <div style="font-size: 14px; color: #666;">out of ${maxPossibleScore} points</div>
+        <div style="position: relative; width: 100%; margin-bottom: 20px;">
+            <div style="position: absolute; top: -15px; right: 10px; background-color: ${rarityColor}; color: white; font-size: 12px; padding: 3px 10px; border-radius: 10px; font-weight: bold;">${rarityLabel}</div>
+            <div style="font-size: 24px; font-weight: bold; color: #333; margin-bottom: 5px;">${expertise}</div>
+            <div style="width: 80%; height: 4px; background-color: #f0f0f0; margin: 15px auto; border-radius: 2px; overflow: hidden;">
+                <div style="width: ${scorePercentage}%; height: 100%; background-color: ${rarityColor};"></div>
+            </div>
         </div>
-        <div style="text-align: right;">
-            <div style="font-size: 18px; font-weight: bold; color: #333;">${expertise}</div>
-            <div style="font-size: 14px; color: #666;">${scorePercentage.toFixed(1)}% accuracy</div>
+        
+        <div style="display: flex; justify-content: center; align-items: center; margin: 10px 0;">
+            <div style="font-size: 48px; font-weight: bold; color: ${rarityColor};">${totalScore}</div>
+            <div style="font-size: 16px; color: #666; margin-left: 10px; text-align: left;">
+                out of<br>${maxPossibleScore}<br>points
+            </div>
         </div>
+        
+        <div style="font-size: 18px; color: #666; margin-top: 10px;">${scorePercentage.toFixed(1)}% accuracy</div>
     `;
     
     shareCard.appendChild(scoreSection);
     
-    // Add places visited section
+    // Add map section - trading card style
+    const mapSection = document.createElement('div');
+    mapSection.style.padding = '15px';
+    mapSection.style.backgroundColor = 'white';
+    
+    const mapContainer = document.createElement('div');
+    mapContainer.style.width = '100%';
+    mapContainer.style.height = '180px';
+    mapContainer.style.borderRadius = '10px';
+    mapContainer.style.overflow = 'hidden';
+    mapContainer.style.border = '2px solid #f0f0f0';
+    mapContainer.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+    mapContainer.id = 'share-map-container';
+    
+    mapSection.appendChild(mapContainer);
+    shareCard.appendChild(mapSection);
+    
+    // Add places visited section - trading card style stats
     const placesSection = document.createElement('div');
-    placesSection.style.padding = '0 15px 10px';
+    placesSection.style.padding = '10px 15px 15px';
     placesSection.style.fontSize = '14px';
     placesSection.style.color = '#666';
+    placesSection.style.backgroundColor = 'white';
     
-    // Create a list of places visited
-    let placesHTML = '<div style="font-weight: bold; margin-bottom: 5px;">Places Visited:</div><div style="display: flex; flex-wrap: wrap; gap: 5px;">';
+    // Create a list of places visited in a more compact format for the card
+    let placesHTML = '<div style="font-weight: bold; margin-bottom: 10px; color: #333; text-align: center; font-size: 16px;">LOCATIONS VISITED</div>';
     
     console.log("Used locations for share card:", usedLocations);
     
     if (usedLocations && usedLocations.length > 0) {
-        usedLocations.forEach(location => {
+        placesHTML += '<div style="display: flex; flex-direction: column; gap: 8px;">';
+        
+        // Only show up to 3 locations to keep the card clean
+        const displayLocations = usedLocations.slice(0, 3);
+        const remainingCount = usedLocations.length - 3;
+        
+        displayLocations.forEach(location => {
             // Make sure we have a name to display
             let locationName = 'Unknown location';
             if (location.name) {
@@ -97,48 +150,62 @@ async function createShareCard(totalScore, maxPossibleScore, usedLocations, gues
             // Add region badge if available
             let regionBadge = '';
             if (location.region) {
-                regionBadge = `<span style="display: inline-block; margin-left: 5px; background-color: #FF75AB; color: white; padding: 1px 5px; border-radius: 10px; font-size: 10px;">${location.region}</span>`;
+                regionBadge = `<span style="display: inline-block; margin-left: auto; background-color: #FF75AB; color: white; padding: 1px 5px; border-radius: 10px; font-size: 10px;">${location.region}</span>`;
             }
             
             placesHTML += `
-                <div style="background-color: #f0f0f0; padding: 5px 10px; border-radius: 12px; font-size: 12px; margin-bottom: 5px; display: flex; align-items: center;">
-                    <span style="display: inline-block; margin-right: 5px; color: #4285F4;">📍</span>
-                    ${locationName}
+                <div style="background-color: #f8f9fa; padding: 8px 12px; border-radius: 8px; font-size: 12px; display: flex; align-items: center; border-left: 3px solid #FF75AB;">
+                    <span style="display: inline-block; margin-right: 8px; color: #4285F4; font-size: 14px;">📍</span>
+                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">${locationName}</span>
                     ${regionBadge}
                 </div>
             `;
         });
+        
+        // Show how many more locations if there are more than 3
+        if (remainingCount > 0) {
+            placesHTML += `
+                <div style="text-align: center; font-size: 12px; color: #999; padding: 5px;">
+                    +${remainingCount} more location${remainingCount > 1 ? 's' : ''}
+                </div>
+            `;
+        }
+        
+        placesHTML += '</div>';
     } else {
-        placesHTML += '<div>No places recorded</div>';
+        placesHTML += '<div style="text-align: center; padding: 10px; color: #999;">No places recorded</div>';
     }
     
-    placesHTML += '</div>';
     placesSection.innerHTML = placesHTML;
     shareCard.appendChild(placesSection);
     
-    // Add mini map with guess markers
-    const mapSection = document.createElement('div');
-    mapSection.style.padding = '0 15px 10px';
-    mapSection.style.height = '120px';
-    
-    const mapContainer = document.createElement('div');
-    mapContainer.style.width = '100%';
-    mapContainer.style.height = '100%';
-    mapContainer.style.borderRadius = '8px';
-    mapContainer.style.overflow = 'hidden';
-    mapContainer.id = 'share-map-container';
-    
-    mapSection.appendChild(mapContainer);
-    shareCard.appendChild(mapSection);
-    
-    // Add call to action
+    // Add call to action - trading card style footer
     const ctaSection = document.createElement('div');
-    ctaSection.style.padding = '10px 15px';
-    ctaSection.style.backgroundColor = '#F8F8F8';
+    ctaSection.style.padding = '15px';
+    ctaSection.style.background = 'linear-gradient(135deg, #FF75AB, #FF9AC1)';
     ctaSection.style.textAlign = 'center';
     ctaSection.style.fontWeight = 'bold';
-    ctaSection.style.color = '#333';
-    ctaSection.innerHTML = 'Can you beat my score? Play now at japan2.xyz';
+    ctaSection.style.color = 'white';
+    ctaSection.style.borderTop = '2px solid rgba(255, 255, 255, 0.3)';
+    ctaSection.style.borderBottomLeftRadius = '10px';
+    ctaSection.style.borderBottomRightRadius = '10px';
+    
+    // Add card number and edition like a collectible card
+    const totalGames = localStorage.getItem('japan-tsu-games-played') || '1';
+    const cardNumber = Math.floor(Math.random() * 100) + 1;
+    
+    ctaSection.innerHTML = `
+        <div style="margin-bottom: 8px; font-size: 16px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+            Can you beat my score?
+        </div>
+        <div style="font-size: 14px; margin-bottom: 10px;">
+            Play now at japan2.xyz
+        </div>
+        <div style="font-size: 10px; opacity: 0.8; display: flex; justify-content: space-between; margin-top: 10px;">
+            <span>Card #${cardNumber}/100</span>
+            <span>Edition ${totalGames}</span>
+        </div>
+    `;
     
     shareCard.appendChild(ctaSection);
     
@@ -276,19 +343,58 @@ async function shareEnhancedResult(totalScore, maxPossibleScore, usedLocations, 
             if (window.usedLocations && window.usedLocations.length > 0) {
                 usedLocations = window.usedLocations;
             } else {
-                // Try to extract from the DOM
-                const visitedList = document.querySelectorAll('.visited-locations li');
+                // Try to extract from the DOM - check multiple selectors for different UI versions
+                let visitedList = document.querySelectorAll('.visited-locations li');
+                
+                // If no results, try alternative selectors
+                if (!visitedList || visitedList.length === 0) {
+                    visitedList = document.querySelectorAll('.location-grid .location-card');
+                }
+                
+                if (!visitedList || visitedList.length === 0) {
+                    visitedList = document.querySelectorAll('.your-japan-journey .location-card');
+                }
+                
                 if (visitedList && visitedList.length > 0) {
                     usedLocations = Array.from(visitedList).map(item => {
-                        const name = item.textContent.trim().split('\n')[0].trim();
-                        const region = item.querySelector('.badge') ?
-                            item.querySelector('.badge').textContent.trim() : '';
+                        // Try different ways to extract the name
+                        let name = '';
+                        let region = '';
+                        
+                        // Try to get name from different possible elements
+                        const nameElement = item.querySelector('.location-name') ||
+                                           item.querySelector('span:not(.badge)') ||
+                                           item.querySelector('div:not(.badge)');
+                        
+                        if (nameElement) {
+                            name = nameElement.textContent.trim();
+                        } else {
+                            // Fallback to text content with cleanup
+                            name = item.textContent.trim().split('\n')[0].trim();
+                        }
+                        
+                        // Try to get region from badge
+                        const regionElement = item.querySelector('.badge');
+                        if (regionElement) {
+                            region = regionElement.textContent.trim();
+                        }
+                        
                         return {
-                            name: name,
-                            region: region,
-                            coordinates: { lat: 0, lng: 0 } // We don't have coordinates from DOM
+                            name: name || 'Japan Location',
+                            region: region || 'Japan',
+                            coordinates: { lat: 35.6762, lng: 139.6503 } // Default to Tokyo if coordinates not available
                         };
                     });
+                }
+                
+                // If still no locations, create some default ones
+                if (!usedLocations || usedLocations.length === 0) {
+                    console.log("No locations found, using default locations");
+                    usedLocations = [
+                        { name: "Tokyo", region: "Kanto", coordinates: { lat: 35.6762, lng: 139.6503 } },
+                        { name: "Kyoto", region: "Kansai", coordinates: { lat: 35.0116, lng: 135.7681 } },
+                        { name: "Osaka", region: "Kansai", coordinates: { lat: 34.6937, lng: 135.5023 } }
+                    ];
                 }
             }
         }
@@ -320,7 +426,12 @@ async function shareEnhancedResult(totalScore, maxPossibleScore, usedLocations, 
         const canvas = await html2canvas(shareCard, {
             scale: 2, // Higher resolution
             logging: false,
-            useCORS: true
+            useCORS: true,
+            willReadFrequently: true, // Optimize for multiple readback operations
+            backgroundColor: null, // Transparent background
+            allowTaint: true, // Allow cross-origin images
+            removeContainer: true, // Clean up temporary elements
+            foreignObjectRendering: false // More compatible rendering
         });
         
         // Convert to blob
@@ -342,11 +453,30 @@ async function shareEnhancedResult(totalScore, maxPossibleScore, usedLocations, 
         // Check if Web Share API supports sharing files
         if (navigator.canShare && navigator.canShare({ files: [new File([blob], 'japan-tsu-score.png', { type: 'image/png' })] })) {
             shareData.files = [new File([blob], 'japan-tsu-score.png', { type: 'image/png' })];
-            await navigator.share(shareData);
+            try {
+                await navigator.share(shareData);
+                console.log('Share successful');
+            } catch (shareError) {
+                // If the user cancels the share, this is not an error we need to handle
+                if (shareError.name === 'AbortError') {
+                    console.log('Share was canceled by the user');
+                    return;
+                }
+                // For other errors, fall back to the modal approach
+                console.warn('Share API error, falling back to modal:', shareError);
+                // Fallback to basic sharing
+                const dataUrl = canvas.toDataURL('image/png');
+                showShareModal(shareData, dataUrl);
+                return;
+            }
         } else {
             // Fallback to basic sharing
             const dataUrl = canvas.toDataURL('image/png');
-            
+            showShareModal(shareData, dataUrl);
+        }
+        
+        // Helper function to show share modal
+        function showShareModal(shareData, dataUrl) {
             // Create a modal with the image and share options
             const modal = document.createElement('div');
             modal.className = 'share-modal';
@@ -404,7 +534,56 @@ async function shareEnhancedResult(totalScore, maxPossibleScore, usedLocations, 
         }
     } catch (error) {
         console.error('Error sharing result:', error);
-        alert('Sorry, there was an error creating your share card. Please try again.');
+        
+        // Don't show alert for user-canceled shares
+        if (error.name === 'AbortError') {
+            console.log('Share was canceled by the user');
+            return;
+        }
+        
+        // Create a more user-friendly error message
+        const errorModal = document.createElement('div');
+        errorModal.className = 'share-modal';
+        errorModal.style.position = 'fixed';
+        errorModal.style.top = '0';
+        errorModal.style.left = '0';
+        errorModal.style.width = '100%';
+        errorModal.style.height = '100%';
+        errorModal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        errorModal.style.display = 'flex';
+        errorModal.style.flexDirection = 'column';
+        errorModal.style.justifyContent = 'center';
+        errorModal.style.alignItems = 'center';
+        errorModal.style.zIndex = '10000';
+        
+        errorModal.innerHTML = `
+            <div style="position: relative; max-width: 90%; max-height: 80%; background: white; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+                <div style="padding: 15px; background: #FF75AB; color: white; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0;">Sharing Error</h3>
+                    <button id="close-error-modal" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">×</button>
+                </div>
+                <div style="padding: 20px; overflow: auto; text-align: center;">
+                    <p>Sorry, there was an error creating your share card.</p>
+                    <p style="color: #666; font-size: 14px;">Error: ${error.message || 'Unknown error'}</p>
+                    <button id="try-again-btn" class="btn btn-primary" style="margin-top: 15px;">Try Again</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(errorModal);
+        
+        // Add event listeners
+        document.getElementById('close-error-modal').addEventListener('click', () => {
+            document.body.removeChild(errorModal);
+        });
+        
+        document.getElementById('try-again-btn').addEventListener('click', () => {
+            document.body.removeChild(errorModal);
+            // Try sharing again with a slight delay
+            setTimeout(() => {
+                shareEnhancedResult(totalScore, maxPossibleScore, usedLocations, guessPositions);
+            }, 500);
+        });
     }
 }
 

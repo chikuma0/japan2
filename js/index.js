@@ -38,12 +38,6 @@ window.initMap = function() {
             console.warn("setupNavigationControls function not available yet");
         }
         
-        // Set up toggle map button event listener
-        const toggleMapButton = document.getElementById('toggle-map');
-        if (toggleMapButton) {
-            toggleMapButton.addEventListener('click', handleToggleMap);
-        }
-        
         // Check if this is the first visit
         const isFirstVisit = !localStorage.getItem('japan-tsu-played');
         
@@ -118,39 +112,58 @@ function fallbackToTraditionalMode() {
 }
 
 /**
- * Handle toggle map button click in immersive mode
+ * Handle minimap zoom functionality
+ * @param {string} action - 'in' or 'out' to zoom in or out
  */
-function handleToggleMap() {
-    const panoramaFullscreen = document.getElementById('panorama-fullscreen');
+function handleMinimapZoom(action) {
     const minimapContainer = document.getElementById('minimap-container');
-    
-    if (!panoramaFullscreen || !minimapContainer) {
-        console.error("Required elements for toggle map not found");
+    if (!minimapContainer) {
+        console.error("Minimap container not found");
         return;
     }
     
-    if (panoramaFullscreen.style.display !== 'none') {
-        panoramaFullscreen.style.display = 'none';
-        minimapContainer.style.width = '100%';
-        minimapContainer.style.height = '100%';
-        minimapContainer.style.zIndex = '1005';
-        
-        // Update toggle map button text
-        const toggleMapButton = document.getElementById('toggle-map');
-        if (toggleMapButton) {
-            toggleMapButton.textContent = 'Return to Panorama';
-        }
+    // Get current dimensions
+    const currentWidth = parseInt(minimapContainer.style.width || '250');
+    const currentHeight = parseInt(minimapContainer.style.height || '250');
+    
+    // Default dimensions
+    const defaultWidth = 250;
+    const defaultHeight = 250;
+    
+    // Maximum dimensions (2x default)
+    const maxWidth = defaultWidth * 2;
+    const maxHeight = defaultHeight * 2;
+    
+    // Minimum dimensions (default)
+    const minWidth = defaultWidth;
+    const minHeight = defaultHeight;
+    
+    // Calculate new dimensions
+    let newWidth, newHeight;
+    
+    if (action === 'in') {
+        // Zoom in by 25%
+        newWidth = Math.min(currentWidth * 1.25, maxWidth);
+        newHeight = Math.min(currentHeight * 1.25, maxHeight);
+    } else if (action === 'out') {
+        // Zoom out by 20%
+        newWidth = Math.max(currentWidth * 0.8, minWidth);
+        newHeight = Math.max(currentHeight * 0.8, minHeight);
     } else {
-        panoramaFullscreen.style.display = 'block';
-        minimapContainer.style.width = '250px';
-        minimapContainer.style.height = '250px';
-        minimapContainer.style.zIndex = '1002';
-        
-        // Update toggle map button text
-        const toggleMapButton = document.getElementById('toggle-map');
-        if (toggleMapButton) {
-            toggleMapButton.textContent = 'Switch to Map';
-        }
+        // Reset to default
+        newWidth = defaultWidth;
+        newHeight = defaultHeight;
+    }
+    
+    // Apply new dimensions
+    minimapContainer.style.width = `${newWidth}px`;
+    minimapContainer.style.height = `${newHeight}px`;
+    
+    console.log(`Minimap resized to ${newWidth}x${newHeight}`);
+    
+    // Trigger resize event for Google Maps to redraw
+    if (window.minimap) {
+        google.maps.event.trigger(window.minimap, 'resize');
     }
 }
 
@@ -158,6 +171,23 @@ function handleToggleMap() {
  * Set up event listeners when the DOM is loaded
  */
 function setupEventListeners() {
+    // Add event listeners for minimap zoom buttons
+    const zoomInButton = document.getElementById('minimap-zoom-in');
+    if (zoomInButton) {
+        zoomInButton.addEventListener('click', function() {
+            handleMinimapZoom('in');
+        });
+        console.log("Minimap zoom in button event listener added");
+    }
+    
+    const zoomOutButton = document.getElementById('minimap-zoom-out');
+    if (zoomOutButton) {
+        zoomOutButton.addEventListener('click', function() {
+            handleMinimapZoom('out');
+        });
+        console.log("Minimap zoom out button event listener added");
+    }
+    
     // Add event listener to immersive guess button
     const immersiveGuessButton = document.getElementById('immersive-guess-btn');
     if (immersiveGuessButton) {
