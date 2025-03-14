@@ -66,8 +66,8 @@ function setupNewRound() {
         // Reset main map completely
         resetMap();
         
-        // Only reset markers on minimap to prevent refreshing
-        resetMinimapMarkers();
+        // Reset minimap completely to clear previous guess trails
+        resetMinimap();
         
         // Don't show journey animation after the final round
         if (currentRound === maxRounds) {
