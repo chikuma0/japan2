@@ -278,10 +278,27 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
         });
         
         document.getElementById('play-again-btn').addEventListener('click', function() {
+            console.log("Play Again button clicked");
             if (window.resetGameGlobal) {
+                console.log("Calling resetGameGlobal function");
                 window.resetGameGlobal();
+            } else {
+                console.error("resetGameGlobal function not available");
             }
         });
+        
+        // Initialize the toggle layout button
+        if (window.initLayoutPreference) {
+            window.initLayoutPreference();
+        }
+        
+        // Apply saved layout preference
+        const savedPreference = localStorage.getItem('japan-tsu-vertical-layout');
+        if (savedPreference === 'true') {
+            document.body.classList.add('vertical-layout');
+        } else {
+            document.body.classList.remove('vertical-layout');
+        }
         
         // Difficulty selection removed to streamline experience
     } else {
@@ -726,8 +743,8 @@ function initResponsiveHelpers() {
     // Initialize map toggle
     initMapToggle();
     
-    // Initialize layout preference
-    initLayoutPreference();
+    // Layout toggle functionality has been removed
+    // initLayoutPreference();
 }
 
 /**
@@ -739,42 +756,15 @@ function initMapToggle() {
 }
 
 /**
- * Initialize layout preference toggle
+ * Initialize layout preference toggle - DISABLED
  */
 function initLayoutPreference() {
-    const layoutToggle = document.createElement('button');
-    layoutToggle.className = 'btn btn-sm layout-toggle';
-    layoutToggle.textContent = 'Toggle Layout';
+    // Function disabled - toggle layout functionality removed
+    console.log("Layout toggle functionality has been disabled");
     
-    // Add to game settings
-    const gameSettings = document.querySelector('.game-settings');
-    if (gameSettings) {
-        gameSettings.appendChild(layoutToggle);
-    } else {
-        // If game settings doesn't exist, add to header
-        const gameHeader = document.querySelector('.game-header');
-        if (gameHeader) {
-            const settingsDiv = document.createElement('div');
-            settingsDiv.className = 'game-settings';
-            settingsDiv.appendChild(layoutToggle);
-            gameHeader.appendChild(settingsDiv);
-        }
-    }
-    
-    // Toggle between layout modes
-    layoutToggle.addEventListener('click', function() {
-        document.body.classList.toggle('vertical-layout');
-        
-        // Save preference
-        const isVertical = document.body.classList.contains('vertical-layout');
-        localStorage.setItem('japan-tsu-vertical-layout', isVertical ? 'true' : 'false');
-    });
-    
-    // Check saved preference
-    const savedPreference = localStorage.getItem('japan-tsu-vertical-layout');
-    if (savedPreference === 'true') {
-        document.body.classList.add('vertical-layout');
-    }
+    // Apply default layout
+    document.body.classList.remove('vertical-layout');
+    localStorage.removeItem('japan-tsu-vertical-layout');
 }
 
 // Initialize responsive helpers when DOM is loaded

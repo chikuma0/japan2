@@ -771,6 +771,7 @@ function resetGame(settings = {}) {
     const gameContainer = document.getElementById("game-container");
     if (gameContainer) {
         gameContainer.innerHTML = `
+            <!-- Game Header -->
             <div class="game-header">
                 <div class="game-logo">
                     <h1>Japan-tsū</h1>
@@ -787,18 +788,12 @@ function resetGame(settings = {}) {
                         </div>
                     </div>
                 </div>
-                <!-- Game settings removed to streamline UI -->
             </div>
-
-            <div class="timer-display" id="timer">2:00</div>
 
             <!-- New Three-Column Layout -->
             <div class="game-layout">
                 <!-- Left Column -->
                 <div class="game-column game-column-left">
-                    <!-- Map Container -->
-                    <div class="map-container" id="map"></div>
-
                     <!-- Game Info -->
                     <div class="game-info">
                         <div class="score-display" id="score">Total Score: 0</div>
@@ -807,40 +802,46 @@ function resetGame(settings = {}) {
                             <div class="progress-bar" style="width: 100%;"></div>
                         </div>
                     </div>
-
-                    <!-- New Left Ad Space -->
+                    
+                    <!-- Result Display -->
+                    <div id="result" style="display: none;"></div>
+                    
+                    <!-- Left Ad Space -->
                     <div class="ad-container ad-container-left">
                         <!-- Ad content will go here -->
                     </div>
                 </div>
-
+        
                 <!-- Center Column -->
                 <div class="game-column game-column-center">
+                    <!-- Timer Display - Moved above panorama -->
+                    <div class="timer-display" id="timer">2:00</div>
+                    
                     <!-- Panorama Viewer -->
                     <div class="panorama-container" id="panorama"></div>
                     
                     <!-- Game Controls -->
                     <div class="game-controls">
                         <button class="btn btn-primary" id="submit-guess">Submit Guess</button>
-                        <button class="btn btn-secondary" id="toggle-immersive-btn" onclick="toggleImmersiveMode()">Immersive Mode</button>
+                        <button class="btn btn-secondary" id="toggle-immersive-btn">Immersive Mode</button>
                     </div>
-
-                    <!-- Result Display -->
-                    <div id="result" style="display: none;"></div>
+                    
+                    <!-- Map Container -->
+                    <div class="map-container" id="map"></div>
                 </div>
-
+        
                 <!-- Right Column -->
                 <div class="game-column game-column-right">
-                    <!-- Location Info (moved from below) -->
+                    <!-- Location Info -->
                     <div class="location-info" id="location-info" style="display: none;"></div>
-
-                    <!-- New Right Ad Space -->
+        
+                    <!-- Right Ad Space -->
                     <div class="ad-container ad-container-right">
                         <!-- Ad content will go here -->
                     </div>
                 </div>
             </div>
-
+        
             <!-- Bottom Ad Space -->
             <div class="ad-container">
                 <!-- Ad content will go here -->
@@ -849,6 +850,9 @@ function resetGame(settings = {}) {
     }
     
     console.log("Game reset. Starting new game with round =", currentRound);
+    
+    // Layout toggle functionality has been removed
+    document.body.classList.remove('vertical-layout');
     
     // We need to reinitialize the map and panorama before starting a new game
     // This is done asynchronously to ensure the DOM elements are ready
