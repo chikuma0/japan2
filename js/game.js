@@ -63,11 +63,41 @@ function setupNewRound() {
     try {
         console.log(`Setting up round ${currentRound} of ${maxRounds}`);
         
-        // Reset maps for both interfaces
+        // Reset main map completely
         resetMap();
-        resetMinimap();
         
-        showLoadingIndicator();
+        // Only reset markers on minimap to prevent refreshing
+        resetMinimapMarkers();
+        
+        // Don't show journey animation after the final round
+        if (currentRound === maxRounds) {
+            // Use a simple loading indicator instead of journey animation
+            let loadingIndicator = document.getElementById('loading-indicator');
+            if (!loadingIndicator) {
+                loadingIndicator = document.createElement('div');
+                loadingIndicator.id = 'loading-indicator';
+                loadingIndicator.className = 'loading-indicator';
+                
+                // Add simple loading message
+                loadingIndicator.innerHTML = `
+                    <div class="loading-spinner"></div>
+                    <p>Loading results...</p>
+                `;
+                
+                // Add to panorama container
+                const panoramaElement = document.getElementById('panorama-fullscreen');
+                if (panoramaElement) {
+                    panoramaElement.style.position = 'relative';
+                    panoramaElement.appendChild(loadingIndicator);
+                } else {
+                    document.body.appendChild(loadingIndicator);
+                }
+            } else {
+                loadingIndicator.style.display = 'block';
+            }
+        } else {
+            showLoadingIndicator();
+        }
         
         // Ensure panorama is initialized
         if (!window.panorama) {
@@ -428,8 +458,10 @@ let isSubmitting = false;
 /**
  * Submit the current guess and calculate score
  */
-// Variable to track if we're moving to the next round
+// Variables to track round transitions
 let nextRoundPending = false;
+let nextRoundData = null; // Will store preloaded data for the next round
+let nextRoundPromise = null; // Promise for tracking next round loading
 
 function submitGuess() {
     try {
@@ -525,24 +557,54 @@ function submitGuess() {
             
             // Delay ending the game to give the player time to see the final round result
             console.log("Delaying end game to show final round result");
+            
+            // Stop any running journey animation immediately
+            if (window.journeyAnimation) {
+                window.journeyAnimation.stop();
+            }
+            
+            // Hide any loading indicators
+            hideLoadingIndicator();
+            
+            // Don't preload next round after the final round
+            nextRoundPromise = null;
+            nextRoundData = null;
+            nextRoundPending = false;
+            
+            // IMPORTANT: Don't set up a new round after the final round
+            // This is the key change to prevent the journey animation from showing after the 5th round
+            
             setTimeout(() => {
+                // Go directly to end game without journey animation after 5th round
                 endGame(totalScore, maxRounds, usedLocations);
-            }, 7000); // Same delay as for showing location info
+                
+                // Return early to prevent any further processing
+                return;
+            }, 2000); // Show results for 2 seconds
         } else {
             // Mark that we're moving to the next round, but don't increment yet
             nextRoundPending = true;
             console.log(`Round ${currentRound} completed. Preparing for next round.`);
+            
+            // Start preloading the next round immediately, but only if we're not at the last round
+            if (currentRound < maxRounds - 1) {
+                nextRoundPromise = preloadNextRound();
+            } else {
+                // For the 4th round (leading to 5th), don't preload since we don't need a 6th round
+                nextRoundPromise = null;
+                nextRoundData = null;
+            }
             
             // Reset the submission flag after a delay
             setTimeout(() => {
                 isSubmitting = false;
             }, 1000);
             
-            // Add event listener to next round button in the results panel
-            const nextRoundButton = document.getElementById("next-round-btn");
-            if (nextRoundButton) {
-                nextRoundButton.addEventListener("click", startJourneyAnimation);
-            }
+            // Set up automatic transition after showing results
+            setTimeout(() => {
+                // Start the journey animation (which will show the next round when ready)
+                startJourneyAnimation();
+            }, 3700); // Show results for 3.7 seconds
         }
     } catch (error) {
         console.error("Error in submitGuess function:", error);
@@ -551,9 +613,74 @@ function submitGuess() {
 }
 
 /**
+ * Preload the next round in the background
+ * @returns {Promise} A promise that resolves when the next round is ready
+ */
+function preloadNextRound() {
+    return new Promise((resolve) => {
+        console.log("Preloading next round in the background");
+        
+        // Get a random location from our database or generator using the existing logic
+        getRandomLocationFromDB().then(locationData => {
+            // Store the location data
+            const preloadedLocationData = locationData;
+            
+            // Convert the coordinates to a LatLng object
+            const coordinates = new google.maps.LatLng(
+                locationData.coordinates.lat,
+                locationData.coordinates.lng
+            );
+            
+            console.log(`Preloading location: ${locationData.name}`);
+            
+            // Find a Street View panorama for this location
+            findStreetViewLocation(coordinates, (location, error) => {
+                if (error) {
+                    console.error('Error finding Street View location for preload:', error);
+                    // Resolve with failure, will fall back to normal loading
+                    resolve(false);
+                    return;
+                }
+                
+                // Store both the location and the location data for the next round
+                nextRoundData = {
+                    location: location,
+                    locationData: preloadedLocationData
+                };
+                
+                console.log('Successfully preloaded next round');
+                // Resolve the promise with success
+                resolve(true);
+            });
+        }).catch(error => {
+            console.error('Error preloading next round:', error);
+            // Resolve with failure, will fall back to normal loading
+            resolve(false);
+        });
+    });
+}
+
+/**
  * Start the journey animation between rounds
  */
 function startJourneyAnimation() {
+    // IMPORTANT: Never show journey animation after the final round
+    // Also check if the next round would be the last round (currentRound + 1 === maxRounds)
+    if (currentRound === maxRounds || (nextRoundPending && currentRound + 1 === maxRounds)) {
+        console.log("Final round completed or transitioning to final round, skipping journey animation");
+        // Wait 3.7 seconds (same as result display time) then proceed
+        setTimeout(() => {
+            if (currentRound === maxRounds) {
+                // If we're already at the last round, end the game
+                endGame(totalScore, maxRounds, usedLocations);
+            } else {
+                // If we're transitioning to the last round, set up the final round
+                setupNewRound();
+            }
+        }, 3700);
+        return;
+    }
+    
     // Hide the results panel
     const resultsPanel = document.getElementById("immersive-results");
     if (resultsPanel) {
@@ -564,16 +691,110 @@ function startJourneyAnimation() {
     if (window.journeyAnimation) {
         window.journeyAnimation.start();
         
-        // After the animation completes, start the next round
-        setTimeout(() => {
-            if (window.journeyAnimation) {
-                window.journeyAnimation.stop();
-            }
-            setupNewRound();
-        }, 7000); // Animation takes about 7 seconds
+        // Always wait exactly 5 seconds before showing the next round
+        // This ensures consistent timing regardless of preloading
+        const animationStartTime = Date.now();
+        
+        // If we have a next round promise, wait for it to complete
+        if (nextRoundPromise) {
+            nextRoundPromise.then(success => {
+                // Calculate how much time has passed since animation started
+                const elapsedTime = Date.now() - animationStartTime;
+                const remainingTime = Math.max(5000 - elapsedTime, 0);
+                
+                console.log(`Animation has been running for ${elapsedTime}ms, waiting ${remainingTime}ms more to ensure 5 seconds total`);
+                
+                // Wait for the remaining time to ensure 5 seconds total
+                setTimeout(() => {
+                    // Stop the animation after exactly 5 seconds
+                    if (window.journeyAnimation) {
+                        window.journeyAnimation.stop();
+                    }
+                    
+                    // Show the next round
+                    showNextRound();
+                }, remainingTime);
+            });
+        } else {
+            // Fallback to the original behavior if no promise exists
+            setTimeout(() => {
+                if (window.journeyAnimation) {
+                    window.journeyAnimation.stop();
+                }
+                
+                // Only set up a new round if we're not at the last round
+                if (currentRound < maxRounds) {
+                    setupNewRound();
+                } else {
+                    // For the 5th round, just end the game
+                    console.log("Final round completed, ending game");
+                    endGame(totalScore, maxRounds, usedLocations);
+                }
+            }, 5000);
+        }
     } else {
         // Fallback if journey animation is not available
-        setupNewRound();
+        if (nextRoundData) {
+            showNextRound();
+        } else {
+            setupNewRound();
+        }
+    }
+}
+
+/**
+ * Show the next round using preloaded data
+ */
+function showNextRound() {
+    // If we have preloaded data, use it
+    if (nextRoundData) {
+        console.log("Using preloaded data for next round");
+        
+        // Update the round number
+        currentRound++;
+        console.log(`Now showing round ${currentRound} of ${maxRounds}`);
+        updateRound(currentRound, maxRounds);
+        
+        // Set the actual location
+        actualLocation = nextRoundData.location;
+        currentLocationData = nextRoundData.locationData;
+        
+        console.log('Original coordinates:', currentLocationData.coordinates.lat, currentLocationData.coordinates.lng);
+        console.log('Panorama location:', actualLocation.lat(), actualLocation.lng());
+        console.log('Location data:', currentLocationData.name, currentLocationData.region);
+        
+        // Set the panorama to the new location with custom POV if available
+        if (currentLocationData.pov) {
+            setPanoramaLocation(actualLocation, currentLocationData.pov);
+        } else {
+            setPanoramaLocation(actualLocation);
+        }
+        
+        // Start the timer for this round
+        startTimer();
+        
+        // Enable the submit button
+        enableSubmitButton();
+        
+        // Reset retry count for next round
+        retryCount = 0;
+        
+        // Reset the next round data and promise
+        nextRoundData = null;
+        nextRoundPromise = null;
+        nextRoundPending = false;
+    } else {
+        // Fallback to the original setup if preloading failed
+        console.log("No preloaded data available, using standard setup");
+        
+        // Only set up a new round if we're not at the last round
+        if (currentRound < maxRounds) {
+            setupNewRound();
+        } else {
+            // For the 5th round, just end the game
+            console.log("Final round completed, ending game");
+            endGame(totalScore, maxRounds, usedLocations);
+        }
     }
 }
 
@@ -620,7 +841,7 @@ function calculateScore(distance) {
  */
 function getJapaneseLevel(percentage) {
     if (percentage >= 90) return "日本地理マスター (Nihon Chiri Master)";
-    if (percentage >= 70) return "本通 (Nihon-tsū)";
+    if (percentage >= 70) return "日本通 (Nihon-tsū)";
     if (percentage >= 50) return "地理オタク (Chiri Otaku)";
     if (percentage >= 30) return "旅行好き (Ryokō-zuki)";
     return "駅前迷子 (Ekimae Maigo)";
@@ -643,7 +864,7 @@ function resetGame(settings = {}) {
     totalScore = 0;
     currentRound = 1;
     resetMap();
-    resetMinimap();
+    resetMinimap(); // Use full reset for new game
     usedLocations = [];
     currentLocationData = null;
     retryCount = 0;

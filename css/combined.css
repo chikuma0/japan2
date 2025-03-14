@@ -2857,12 +2857,15 @@ body.vertical-layout .map-container {
     transform: translate(-50%, -50%);
     width: 80%;
     max-width: 500px;
+    max-height: 80vh; /* Limit height to 80% of viewport height */
     background-color: rgba(255, 255, 255, 0.9);
     border-radius: 20px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    overflow: hidden;
+    overflow-y: auto; /* Make it scrollable if content is too large */
     font-family: 'Varela Round', sans-serif;
     animation: pop-in 0.5s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 @keyframes pop-in {
@@ -2894,6 +2897,8 @@ body.vertical-layout .map-container {
 
 .results-content {
     padding: 20px;
+    overflow-y: auto; /* Enable scrolling for content */
+    flex: 1; /* Allow content to take available space */
 }
 
 .result-stats {
@@ -2940,10 +2945,15 @@ body.vertical-layout .map-container {
 
 /* Auto-next timer */
 .auto-next-timer {
-    margin-top: 10px;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    padding: 10px;
     font-size: 14px;
     color: #666;
     animation: pulse 1s infinite;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
 }
 
 .auto-next-timer span {

@@ -41,12 +41,19 @@ async function createShareCard(totalScore, maxPossibleScore, usedLocations, gues
             <h2 style="margin: 0; font-size: 32px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);">Japan-tsū</h2>
             <div style="font-size: 14px; margin-top: 5px; letter-spacing: 1px;">EXPERTISE CARD</div>
         </div>
-        <div style="width: 80px; height: 80px; margin: 10px 0; background-color: #FF9AC1; border-radius: 50%; position: relative; overflow: hidden; border: 3px solid white; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
-            <div style="position: absolute; top: 30%; left: 50%; transform: translateX(-50%); width: 60%; height: 40%; display: flex; justify-content: space-between;">
-                <div style="width: 8px; height: 8px; background-color: #333; border-radius: 50%;"></div>
-                <div style="width: 8px; height: 8px; background-color: #333; border-radius: 50%;"></div>
-            </div>
-            <div style="position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); width: 30%; height: 10%; border-bottom: 3px solid #333; border-radius: 50%;"></div>
+        <div style="width: 80px; height: 80px; margin: 10px 0; border-radius: 50%; position: relative; overflow: hidden; border: 3px solid white; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); background-color: white;">
+            ${window.generateDynamicCard ?
+                `<div style="width: 100%; height: 100%; transform: scale(1.5); transform-origin: center 30%;">
+                    ${window.generateDynamicCard(totalScore, maxPossibleScore, scorePercentage, expertise)}
+                </div>` :
+                `<img src="${
+                    scorePercentage >= 90 ? 'images/master-card.svg' :
+                    scorePercentage >= 70 ? 'images/expert-card.svg' :
+                    scorePercentage >= 50 ? 'images/intermediate-card.svg' :
+                    scorePercentage >= 30 ? 'images/beginner-card.svg' :
+                    'images/novice-card.svg'
+                }" alt="Mascot" style="width: 100%; height: 100%; object-fit: cover; object-position: center 30%;">`
+            }
         </div>
     `;
     

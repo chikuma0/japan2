@@ -155,11 +155,12 @@ class JourneyAnimation {
       landmarksEl.appendChild(landmarkEl);
     }, 5000));
     
-    // Stage 6: Ready for next challenge (6-7s)
+    // Stage 6: Final stage - exactly at 5 seconds to ensure consistent timing
     this.animationTimers.push(setTimeout(() => {
       messageEl.textContent = this.messages[5];
       progressBar.style.width = '100%';
-    }, 6000));
+      console.log("Journey animation completed after exactly 5 seconds");
+    }, 5000)); // Set to exactly 5000ms for consistent timing
   }
 
   /**

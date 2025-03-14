@@ -427,6 +427,37 @@ function resetMinimap() {
 }
 
 /**
+ * Reset only the markers on the minimap without reinitializing the map
+ * This prevents the minimap from refreshing between rounds
+ */
+function resetMinimapMarkers() {
+    try {
+        if (minimapGuessMarker) minimapGuessMarker.setMap(null);
+        if (minimapActualMarker) minimapActualMarker.setMap(null);
+        if (minimapAnimationPath) minimapAnimationPath.setMap(null);
+        
+        // Reset global variables
+        minimapGuessMarker = null;
+        minimapActualMarker = null;
+        minimapAnimationPath = null;
+        
+        // Reset window variables
+        window.minimapGuessMarker = null;
+        window.minimapActualMarker = null;
+        window.minimapAnimationPath = null;
+        
+        // Disable the guess button
+        const guessButton = document.getElementById("immersive-guess-btn");
+        if (guessButton) {
+            guessButton.disabled = true;
+            guessButton.classList.remove("active");
+        }
+    } catch (error) {
+        console.error("Error resetting minimap markers:", error);
+    }
+}
+
+/**
  * Get random coordinates within Japan bounds
  * @returns {Object} Random coordinates {lat, lng}
  */
@@ -448,6 +479,7 @@ window.createArrowSymbol = createArrowSymbol;
 window.animateArrowSlower = animateArrowSlower;
 window.resetMap = resetMap;
 window.resetMinimap = resetMinimap;
+window.resetMinimapMarkers = resetMinimapMarkers;
 window.getRandomCoordinates = getRandomCoordinates;
 
 // Log that the map.js module has loaded
