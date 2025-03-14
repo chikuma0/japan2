@@ -4,6 +4,8 @@
 
 // Panorama variables - using window.panorama instead of local variable
 // to ensure it's accessible across the module
+let lastPanoId = null; // Track the last panorama ID for navigation history
+let panoramaHistory = []; // Store panorama history for undo functionality
 
 /**
  * Initialize the Street View panorama
@@ -61,6 +63,230 @@ function initializeFullscreenPanorama(position, pov, zoom) {
     );
     
     return panoramaFullscreen;
+}
+
+/**
+ * Initialize the panorama directly in the immersive view (new main interface)
+ * @param {Object} options - Options for panorama initialization
+ * @returns {google.maps.StreetViewPanorama} The initialized panorama instance
+ */
+function initializeImmersivePanorama(options = {}) {
+    const defaultOptions = {
+        position: { lat: 35.6895, lng: 139.6917 }, // Default to Tokyo
+        pov: { heading: 0, pitch: 0 },
+        zoom: 1,
+        addressControl: false,
+        showRoadLabels: false,
+        fullscreenControl: false,
+        linksControl: true,
+        panControl: false,
+        zoomControl: false,
+        motionTracking: false,
+        motionTrackingControl: false
+    };
+    
+    const panoramaOptions = { ...defaultOptions, ...options };
+    
+    const panoramaElement = document.getElementById("panorama-fullscreen");
+    if (!panoramaElement) {
+        console.error("Immersive panorama element not found");
+        return null;
+    }
+    
+    const panoramaInstance = new google.maps.StreetViewPanorama(
+        panoramaElement,
+        panoramaOptions
+    );
+    
+    // Add event listeners for compass and navigation
+    panoramaInstance.addListener("pov_changed", updateCompass);
+    panoramaInstance.addListener("position_changed", function() {
+        // Store panorama history for undo functionality
+        const currentPanoId = panoramaInstance.getPano();
+        if (currentPanoId && currentPanoId !== lastPanoId) {
+            panoramaHistory.push({
+                pano: lastPanoId,
+                position: panoramaInstance.getPosition(),
+                pov: panoramaInstance.getPov()
+            });
+            
+            // Limit history to last 20 positions
+            if (panoramaHistory.length > 20) {
+                panoramaHistory.shift();
+            }
+            
+            lastPanoId = currentPanoId;
+        }
+    });
+    
+    return panoramaInstance;
+}
+
+/**
+ * Update the compass based on the current heading
+ */
+function updateCompass() {
+    const compassElement = document.getElementById("immersive-compass");
+    if (!compassElement || !window.panorama) return;
+    
+    const heading = window.panorama.getPov().heading;
+    
+    // Get cardinal direction
+    const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+    const index = Math.round(heading / 45) % 8;
+    const direction = directions[index];
+    
+    // Update compass display
+    compassElement.innerHTML = `
+        <div class="compass-needle" style="transform: rotate(${heading}deg)"></div>
+        <span class="heading">${Math.round(heading)}°</span>
+        <span class="direction">${direction}</span>
+    `;
+}
+
+/**
+ * Set up navigation controls for the panorama
+ */
+function setupNavigationControls() {
+    // Zoom controls
+    const zoomInButton = document.querySelector(".zoom-in");
+    if (zoomInButton) {
+        zoomInButton.addEventListener("click", () => {
+            if (!window.panorama) return;
+            const currentZoom = window.panorama.getZoom();
+            window.panorama.setZoom(Math.min(currentZoom + 1, 4)); // Max zoom level is 4
+        });
+    }
+    
+    const zoomOutButton = document.querySelector(".zoom-out");
+    if (zoomOutButton) {
+        zoomOutButton.addEventListener("click", () => {
+            if (!window.panorama) return;
+            const currentZoom = window.panorama.getZoom();
+            window.panorama.setZoom(Math.max(currentZoom - 1, 0)); // Min zoom level is 0
+        });
+    }
+    
+    // Movement controls
+    const moveForwardButton = document.querySelector(".move-forward");
+    if (moveForwardButton) {
+        moveForwardButton.addEventListener("click", () => {
+            if (!window.panorama) return;
+            const links = window.panorama.getLinks();
+            if (links && links.length > 0) {
+                // Find the link closest to the current heading
+                const heading = window.panorama.getPov().heading;
+                let closestLink = links[0];
+                let minAngleDiff = 360;
+                
+                links.forEach(link => {
+                    const angleDiff = Math.abs(((link.heading - heading + 180) % 360) - 180);
+                    if (angleDiff < minAngleDiff) {
+                        minAngleDiff = angleDiff;
+                        closestLink = link;
+                    }
+                });
+                
+                // Move to the closest link
+                window.panorama.setPano(closestLink.pano);
+            }
+        });
+    }
+    
+    const moveBackwardButton = document.querySelector(".move-backward");
+    if (moveBackwardButton) {
+        moveBackwardButton.addEventListener("click", () => {
+            if (!window.panorama) return;
+            const links = window.panorama.getLinks();
+            if (links && links.length > 0) {
+                // Find the link closest to the opposite of current heading
+                const heading = (window.panorama.getPov().heading + 180) % 360;
+                let closestLink = links[0];
+                let minAngleDiff = 360;
+                
+                links.forEach(link => {
+                    const angleDiff = Math.abs(((link.heading - heading + 180) % 360) - 180);
+                    if (angleDiff < minAngleDiff) {
+                        minAngleDiff = angleDiff;
+                        closestLink = link;
+                    }
+                });
+                
+                // Move to the closest link
+                window.panorama.setPano(closestLink.pano);
+            }
+        });
+    }
+    
+    // Return to start button
+    const returnToStartButton = document.querySelector(".return-to-start");
+    if (returnToStartButton) {
+        returnToStartButton.addEventListener("click", () => {
+            if (!window.panorama || !window.actualLocation) return;
+            window.panorama.setPosition(window.actualLocation);
+        });
+    }
+    
+    // Undo last move button
+    const undoMoveButton = document.querySelector(".undo-move");
+    if (undoMoveButton) {
+        undoMoveButton.addEventListener("click", () => {
+            if (!window.panorama || panoramaHistory.length === 0) return;
+            
+            const lastPosition = panoramaHistory.pop();
+            if (lastPosition && lastPosition.pano) {
+                window.panorama.setPano(lastPosition.pano);
+                if (lastPosition.pov) {
+                    window.panorama.setPov(lastPosition.pov);
+                }
+            }
+        });
+    }
+    
+    // Set checkpoint button
+    const setCheckpointButton = document.querySelector(".set-checkpoint");
+    if (setCheckpointButton) {
+        setCheckpointButton.addEventListener("click", () => {
+            if (!window.panorama) return;
+            
+            // Store current position as a checkpoint
+            window.checkpointPosition = {
+                pano: window.panorama.getPano(),
+                position: window.panorama.getPosition(),
+                pov: window.panorama.getPov()
+            };
+            
+            // Show a brief notification
+            const notification = document.createElement('div');
+            notification.className = 'checkpoint-notification';
+            notification.style.position = 'absolute';
+            notification.style.top = '50%';
+            notification.style.left = '50%';
+            notification.style.transform = 'translate(-50%, -50%)';
+            notification.style.background = 'rgba(0, 0, 0, 0.7)';
+            notification.style.color = 'white';
+            notification.style.padding = '10px 20px';
+            notification.style.borderRadius = '20px';
+            notification.style.zIndex = '2000';
+            notification.innerHTML = 'Checkpoint set!';
+            
+            document.getElementById('immersive-view').appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 1500);
+        });
+    }
+    
+    // Settings button (placeholder for future functionality)
+    const settingsButton = document.querySelector(".settings");
+    if (settingsButton) {
+        settingsButton.addEventListener("click", () => {
+            console.log("Settings button clicked - functionality to be implemented");
+        });
+    }
 }
 
 /**
@@ -143,10 +369,16 @@ function setPanoramaLocation(location, customPov = null) {
             pitch: 0
         });
     }
+    
+    // Update compass after setting POV
+    updateCompass();
 }
 
 // Make functions globally available
 window.initializePanorama = initializePanorama;
 window.initializeFullscreenPanorama = initializeFullscreenPanorama;
+window.initializeImmersivePanorama = initializeImmersivePanorama;
 window.findStreetViewLocation = findStreetViewLocation;
 window.setPanoramaLocation = setPanoramaLocation;
+window.updateCompass = updateCompass;
+window.setupNavigationControls = setupNavigationControls;

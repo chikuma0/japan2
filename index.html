@@ -5,11 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Japan-tsū</title>
     <!-- Replace inline styles with our new CSS structure -->
-    <link rel="stylesheet" href="css/combined.css?v=1.0.2">
+    <link rel="stylesheet" href="css/combined.css?v=1.0.3">
 </head>
 <body>
-    <!-- Main Game Container -->
-    <div class="game-container" id="game-container">
+    <!-- Immersive View (now the main interface) -->
+    <div class="immersive-view active" id="immersive-view">
+        <!-- Fullscreen panorama -->
+        <div class="panorama-fullscreen" id="panorama-fullscreen"></div>
+        
+        <!-- Game UI Overlay -->
+        <div class="game-ui-overlay">
+            <!-- Top bar with game info -->
+            <div class="top-bar">
+                <div class="game-logo">
+                    <h1>Japan-tsū</h1>
+                    <div class="mascot mascot-sm">
+                        <div class="japan-mascot">
+                            <div class="mascot-face">
+                                <div class="mascot-eyes">
+                                    <div class="mascot-eye"></div>
+                                    <div class="mascot-eye"></div>
+                                </div>
+                                <div class="mascot-blush"></div>
+                                <div class="mascot-mouth"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="round-info" id="immersive-round">Round: 1/5</div>
+                <div class="score-info" id="immersive-score">Score: 0</div>
+                <div class="timer" id="immersive-timer">2:00</div>
+            </div>
+            
+            <!-- Compass -->
+            <div class="compass" id="immersive-compass">
+                <div class="compass-needle"></div>
+                <span class="heading">0°</span>
+                <span class="direction">N</span>
+            </div>
+            
+            <!-- Navigation controls -->
+            <div class="nav-controls">
+                <div class="zoom-controls">
+                    <button class="zoom-in" title="Zoom In">+</button>
+                    <button class="zoom-out" title="Zoom Out">-</button>
+                </div>
+                <div class="movement-controls">
+                    <button class="move-forward" title="Move Forward">↑</button>
+                    <button class="move-backward" title="Move Backward">↓</button>
+                </div>
+                <div class="additional-controls">
+                    <button class="return-to-start" title="Return to Start">⟲</button>
+                    <button class="set-checkpoint" title="Set Checkpoint">📍</button>
+                    <button class="undo-move" title="Undo Last Move">↩</button>
+                    <button class="settings" title="Settings">⚙</button>
+                </div>
+            </div>
+            
+            <!-- Toggle Map Button -->
+            <button class="toggle-map-btn" id="toggle-map">Switch to Map</button>
+            
+            <!-- Minimap for guessing -->
+            <div class="minimap-container" id="minimap-container">
+                <div class="minimap" id="minimap"></div>
+                <button class="guess-btn" id="immersive-guess-btn" disabled>GUESS</button>
+            </div>
+            
+            <!-- Results panel (hidden until round end) -->
+            <div class="results-panel" id="immersive-results" style="display: none;">
+                <!-- Content will be dynamically generated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Original Game Container (hidden) -->
+    <div class="game-container" id="game-container" style="display: none;">
         <!-- Game Header -->
         <div class="game-header">
             <div class="game-logo">
@@ -88,19 +158,6 @@
         <div class="ad-container">
             <!-- Ad content will go here -->
         </div>
-    </div>
-
-    <!-- Immersive View -->
-    <div class="immersive-view" id="immersive-view">
-        <div class="panorama-fullscreen" id="panorama-fullscreen"></div>
-        <div class="mini-map-container" id="mini-map-container">
-            <div class="mini-map" id="mini-map"></div>
-            <button class="btn btn-sm btn-primary" id="toggle-map">Switch to Map</button>
-        </div>
-        <div class="immersive-controls">
-            <button class="btn btn-primary" id="exit-immersive">Exit Immersive Mode</button>
-        </div>
-        <div class="immersive-timer" id="immersive-timer"></div>
     </div>
 
     <!-- Loading Indicator -->

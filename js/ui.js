@@ -3,20 +3,27 @@
  */
 
 // UI state variables
-window.isImmersiveMode = false;
+window.isImmersiveMode = true; // Default to immersive mode
 
 /**
  * Update the score display
  * @param {number} totalScore - The current total score
  */
 function updateScore(totalScore) {
+    // Update score in both interfaces for consistency
     const scoreElement = document.getElementById("score");
     if (scoreElement) {
         scoreElement.textContent = `Total Score: ${totalScore}`;
         scoreElement.classList.add('pulse');
         setTimeout(() => scoreElement.classList.remove('pulse'), 1000);
-    } else {
-        console.error("Score element not found");
+    }
+    
+    // Update immersive score
+    const immersiveScoreElement = document.getElementById("immersive-score");
+    if (immersiveScoreElement) {
+        immersiveScoreElement.textContent = `Score: ${totalScore}`;
+        immersiveScoreElement.classList.add('pulse');
+        setTimeout(() => immersiveScoreElement.classList.remove('pulse'), 1000);
     }
     
     // Update timer progress bar
@@ -31,12 +38,16 @@ function updateScore(totalScore) {
 function updateRound(currentRound, maxRounds) {
     console.log(`Updating round display: ${currentRound} / ${maxRounds}`);
     
+    // Update round in both interfaces for consistency
     const roundElement = document.getElementById("round");
     if (roundElement) {
         roundElement.textContent = `Round: ${currentRound} / ${maxRounds}`;
-        console.log(`Round display updated to: ${roundElement.textContent}`);
-    } else {
-        console.error("Round element not found");
+    }
+    
+    // Update immersive round
+    const immersiveRoundElement = document.getElementById("immersive-round");
+    if (immersiveRoundElement) {
+        immersiveRoundElement.textContent = `Round: ${currentRound}/${maxRounds}`;
     }
 }
 
@@ -71,6 +82,13 @@ function updateTimerProgress(timeLeft, totalTime = 120) {
  * @param {number} score - Score for this round
  */
 function showResult(distance, score) {
+    // If in immersive mode, use the immersive result display
+    if (window.isImmersiveMode) {
+        showImmersiveResult(distance, score);
+        return;
+    }
+    
+    // Legacy result display for non-immersive mode
     const resultElement = document.getElementById("result");
     if (resultElement) {
         // Create a card-like result display
@@ -107,6 +125,163 @@ function showResult(distance, score) {
 }
 
 /**
+ * Show the result of the current round in the immersive interface
+ * @param {number} distance - Distance in kilometers
+ * @param {number} score - Score for this round
+ */
+function showImmersiveResult(distance, score) {
+    const resultsPanel = document.getElementById("immersive-results");
+    if (!resultsPanel) {
+        console.error("Immersive results panel not found");
+        return;
+    }
+    
+    // Calculate accuracy rating based on distance
+    let accuracyRating = '';
+    let accuracyClass = '';
+    
+    if (distance < 1) {
+        accuracyRating = 'Perfect!';
+        accuracyClass = 'badge-accent';
+    } else if (distance < 5) {
+        accuracyRating = 'Excellent!';
+        accuracyClass = 'badge-primary';
+    } else if (distance < 20) {
+        accuracyRating = 'Great!';
+        accuracyClass = 'badge-primary';
+    } else if (distance < 50) {
+        accuracyRating = 'Good';
+        accuracyClass = 'badge-secondary';
+    } else if (distance < 100) {
+        accuracyRating = 'Not bad';
+        accuracyClass = 'badge-secondary';
+    } else if (distance < 200) {
+        accuracyRating = 'Could be better';
+        accuracyClass = 'badge-secondary';
+    } else {
+        accuracyRating = 'Way off';
+        accuracyClass = 'badge-secondary';
+    }
+    
+    // Get current round and max rounds
+    const currentRound = document.getElementById("immersive-round")?.textContent.split('/')[0].trim() || '1';
+    const maxRounds = document.getElementById("immersive-round")?.textContent.split('/')[1].trim() || '5';
+    const isLastRound = currentRound === maxRounds;
+    
+    // Format results panel content
+    resultsPanel.innerHTML = `
+        <div class="results-header">
+            <h3>Round Result</h3>
+            <button class="close-results">×</button>
+        </div>
+        <div class="results-content">
+            <div class="result-stats">
+                <div class="result-distance">
+                    <strong>Distance:</strong> ${distance.toFixed(2)} km
+                </div>
+                <div class="result-score">
+                    <strong>Points:</strong> <span class="badge badge-accent">+${score}</span>
+                </div>
+                <div class="result-accuracy">
+                    <strong>Accuracy:</strong> <span class="badge ${accuracyClass}">${accuracyRating}</span>
+                </div>
+            </div>
+            ${window.currentLocationData ? `
+                <div class="location-info">
+                    <h4>${window.currentLocationData.name || 'Unknown location'}</h4>
+                    <p><strong>Region:</strong> <span class="badge badge-secondary">${window.currentLocationData.region || 'Unknown region'}</span></p>
+                    ${window.currentLocationData.facts ? `<p><strong>Fun Fact:</strong> ${window.currentLocationData.facts}</p>` : ''}
+                </div>
+            ` : ''}
+            <div class="next-round-btn">
+                <button class="btn btn-primary" id="next-round-btn">
+                    ${isLastRound ? 'See Final Results' : 'Next Round'}
+                </button>
+                <div class="auto-next-timer">
+                    <span>Next round in <span id="auto-next-countdown">3</span>...</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Show the results panel
+    resultsPanel.style.display = "block";
+    
+    // Add event listener to close button
+    const closeButton = resultsPanel.querySelector(".close-results");
+    if (closeButton) {
+        closeButton.addEventListener("click", () => {
+            resultsPanel.style.display = "none";
+            // Cancel auto-transition if user closes the panel
+            if (window.autoNextTimeout) {
+                clearTimeout(window.autoNextTimeout);
+                window.autoNextTimeout = null;
+            }
+        });
+    }
+    
+    // Add event listener to next round button
+    const nextRoundButton = document.getElementById("next-round-btn");
+    if (nextRoundButton) {
+        nextRoundButton.addEventListener("click", () => {
+            resultsPanel.style.display = "none";
+            // Cancel auto-transition if user clicks the button
+            if (window.autoNextTimeout) {
+                clearTimeout(window.autoNextTimeout);
+                window.autoNextTimeout = null;
+            }
+            
+            if (isLastRound) {
+                endGame(window.totalScore, parseInt(maxRounds), window.usedLocations);
+            } else {
+                // Start the journey animation
+                if (typeof window.startJourneyAnimation === 'function') {
+                    window.startJourneyAnimation();
+                }
+            }
+        });
+    }
+    
+    // Show confetti for good scores
+    if (score > 4000) {
+        showConfetti();
+    }
+    
+    // Set up automatic transition after 3.7 seconds
+    if (!isLastRound) {
+        // Set up countdown timer
+        let countdown = 3;
+        const countdownElement = document.getElementById("auto-next-countdown");
+        
+        // Update countdown every second
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            if (countdownElement) {
+                countdownElement.textContent = countdown;
+            }
+            
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+            }
+        }, 1000);
+        
+        // Set timeout for auto-transition
+        window.autoNextTimeout = setTimeout(() => {
+            // Clear the interval if it's still running
+            clearInterval(countdownInterval);
+            
+            // Hide results panel
+            resultsPanel.style.display = "none";
+            
+            // Start journey animation
+            if (typeof window.startJourneyAnimation === 'function') {
+                window.startJourneyAnimation();
+            }
+        }, 3700); // 3.7 seconds
+    }
+}
+
+/**
  * End the game and show final results
  * @param {number} totalScore - The final total score
  * @param {number} maxRounds - The maximum number of rounds
@@ -120,6 +295,12 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
     if (timerInterval) {
         clearInterval(timerInterval);
         window.timerInterval = null;
+    }
+    
+    // Clear auto-next timeout if it exists
+    if (window.autoNextTimeout) {
+        clearTimeout(window.autoNextTimeout);
+        window.autoNextTimeout = null;
     }
     
     const maxPossibleScore = 5000 * maxRounds;
@@ -164,111 +345,70 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
         showConfetti(20); // Less confetti for medium scores
     }
     
-    // First, make sure any existing result and score elements are properly hidden
-    // to prevent "not found" errors when they're removed from the DOM
-    const existingResultElement = document.getElementById("result");
-    if (existingResultElement) {
-        existingResultElement.style.display = "none";
-    }
-    
-    const existingScoreElement = document.getElementById("score");
-    if (existingScoreElement) {
-        existingScoreElement.style.display = "none";
-    }
-    
-    // Now update the game container with the end game content
-    const gameContainer = document.getElementById("game-container");
-    if (gameContainer) {
-        // Create a new div to hold the end game content
-        const endGameContent = document.createElement('div');
-        endGameContent.className = 'end-game-content';
-        endGameContent.innerHTML = `
-            <div class="game-header">
-                <div class="game-logo">
-                    <h1>Japan-tsū</h1>
-                    <div class="mascot mascot-sm">
-                        <div class="japan-mascot">
-                            <div class="mascot-face">
-                                <div class="mascot-eyes">
-                                    <div class="mascot-eye"></div>
-                                    <div class="mascot-eye"></div>
+    // Create end game overlay for immersive mode
+    const immersiveView = document.getElementById('immersive-view');
+    if (immersiveView) {
+        // Create end game overlay
+        const endGameOverlay = document.createElement('div');
+        endGameOverlay.className = 'end-game-overlay';
+        endGameOverlay.style.position = 'absolute';
+        endGameOverlay.style.top = '0';
+        endGameOverlay.style.left = '0';
+        endGameOverlay.style.width = '100%';
+        endGameOverlay.style.height = '100%';
+        endGameOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        endGameOverlay.style.zIndex = '2000';
+        endGameOverlay.style.display = 'flex';
+        endGameOverlay.style.flexDirection = 'column';
+        endGameOverlay.style.justifyContent = 'center';
+        endGameOverlay.style.alignItems = 'center';
+        endGameOverlay.style.padding = '20px';
+        
+        // Create end game content
+        endGameOverlay.innerHTML = `
+            <div class="end-game-content" style="background-color: white; border-radius: 20px; padding: 30px; max-width: 800px; width: 90%; text-align: center;">
+                <div class="game-header">
+                    <div class="game-logo">
+                        <h1>Japan-tsū</h1>
+                        <div class="mascot mascot-sm">
+                            <div class="japan-mascot">
+                                <div class="mascot-face">
+                                    <div class="mascot-eyes">
+                                        <div class="mascot-eye"></div>
+                                        <div class="mascot-eye"></div>
+                                    </div>
+                                    <div class="mascot-blush"></div>
+                                    <div class="mascot-mouth"></div>
                                 </div>
-                                <div class="mascot-blush"></div>
-                                <div class="mascot-mouth"></div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="timer-display" id="timer">Game Over!</div>
-            
-            <!-- New Three-Column Layout -->
-            <div class="game-layout">
-                <!-- Left Column -->
-                <div class="game-column game-column-left">
-                    <!-- Game Info -->
-                    <div class="game-info">
-                        <div class="score-display">
-                            <span>${totalScore} / ${maxPossibleScore}</span>
-                        </div>
-                        <div class="badge badge-primary">${scorePercentage.toFixed(2)}%</div>
-                    </div>
-                    
-                    <!-- Result Display -->
-                    <div class="result-container" id="result-container">
-                        <div class="result-card ${cardClass} pop">
-                            <h3 class="japanese-text">${assessment}</h3>
-                        </div>
-                        <p id="game-url">Play at: japan2.xyz</p>
-                    </div>
-                    
-                    <!-- Left Ad Space -->
-                    <div class="ad-container ad-container-left">
-                        <!-- Ad content will go here -->
-                    </div>
-                    
+                
+                <h2>Game Over!</h2>
+                
+                <div class="score-display" style="font-size: 24px; margin: 20px 0;">
+                    <span>${totalScore} / ${maxPossibleScore}</span>
+                    <div class="badge badge-primary" style="font-size: 18px; margin-left: 10px;">${scorePercentage.toFixed(2)}%</div>
                 </div>
                 
-                <!-- Center Column -->
-                <div class="game-column game-column-center">
-                    ${visitedLocationsHTML}
-                    
-                    <div class="social-sharing">
-                        <button class="btn btn-primary btn-icon" id="share-result-btn">
-                            <span>Share Result</span>
-                        </button>
-                    </div>
-                    
-                    <div class="game-controls">
-                        <button class="btn btn-secondary" id="play-again-btn">Play Again</button>
-                    </div>
-                    
-                    <!-- Game options simplified for cleaner UI -->
-                    
+                <div class="result-card ${cardClass}" style="width: 300px; height: 300px; margin: 0 auto 20px auto; border-radius: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;">
+                    <h3 class="japanese-text">${assessment}</h3>
                 </div>
                 
-                <!-- Right Column -->
-                <div class="game-column game-column-right">
-                    <!-- Location Info -->
-                    <div class="location-info" id="location-info" style="display: none;"></div>
-                    
+                ${visitedLocationsHTML}
+                
+                <div class="game-controls" style="margin-top: 30px;">
+                    <button class="btn btn-primary btn-icon" id="share-result-btn" style="margin-right: 15px;">
+                        <span>Share Result</span>
+                    </button>
+                    <button class="btn btn-secondary" id="play-again-btn">Play Again</button>
                 </div>
             </div>
-            
-            <!-- Bottom Ad Space -->
-            <div class="ad-container">
-                <!-- Ad content will go here -->
-            </div>
-            
-            <!-- Create new result and score elements for the end game screen -->
-            <div id="result" style="display: none;"></div>
-            <div id="score" style="display: none;">Total Score: ${totalScore}</div>
         `;
         
-        // Clear the game container and add the end game content
-        gameContainer.innerHTML = '';
-        gameContainer.appendChild(endGameContent);
+        // Add to immersive view
+        immersiveView.appendChild(endGameOverlay);
         
         // Add event listeners to the buttons
         document.getElementById('share-result-btn').addEventListener('click', function() {
@@ -279,6 +419,11 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
         
         document.getElementById('play-again-btn').addEventListener('click', function() {
             console.log("Play Again button clicked");
+            // Remove end game overlay
+            if (endGameOverlay.parentNode) {
+                endGameOverlay.parentNode.removeChild(endGameOverlay);
+            }
+            
             if (window.resetGameGlobal) {
                 console.log("Calling resetGameGlobal function");
                 window.resetGameGlobal();
@@ -286,128 +431,17 @@ function endGame(totalScore, maxRounds, usedLocations = []) {
                 console.error("resetGameGlobal function not available");
             }
         });
-        
-        // Initialize the toggle layout button
-        if (window.initLayoutPreference) {
-            window.initLayoutPreference();
-        }
-        
-        // Apply saved layout preference
-        const savedPreference = localStorage.getItem('japan-tsu-vertical-layout');
-        if (savedPreference === 'true') {
-            document.body.classList.add('vertical-layout');
-        } else {
-            document.body.classList.remove('vertical-layout');
-        }
-        
-        // Difficulty selection removed to streamline experience
     } else {
-        console.error("Game container element not found");
+        console.error("Immersive view element not found");
     }
 }
 
 /**
- * Toggle immersive mode
+ * Toggle immersive mode (legacy function, kept for compatibility)
  */
 function toggleImmersiveMode() {
-    window.isImmersiveMode = !window.isImmersiveMode;
-    const immersiveView = document.getElementById('immersive-view');
-    const gameContainer = document.getElementById('game-container');
-    
-    if (!immersiveView || !gameContainer) {
-        console.error("Required elements for immersive mode not found");
-        return;
-    }
-    
-    if (window.isImmersiveMode) {
-        // Show immersive view with animation
-        immersiveView.style.display = 'block';
-        immersiveView.classList.add('fade-in');
-        gameContainer.classList.add('fade-out');
-        
-        setTimeout(() => {
-            gameContainer.style.display = 'none';
-            gameContainer.classList.remove('fade-out');
-        }, 500);
-        
-        // Initialize the fullscreen panorama
-        try {
-            // Get the current position, pov, and zoom from the main panorama
-            const position = window.panorama.getPosition();
-            const pov = window.panorama.getPov();
-            const zoom = window.panorama.getZoom();
-            
-            // Initialize the fullscreen panorama
-            window.panoramaFullscreen = initializeFullscreenPanorama(
-                position,
-                pov,
-                zoom
-            );
-            
-            console.log("Fullscreen panorama initialized");
-        } catch (error) {
-            console.error("Error in immersive mode panorama setup:", error);
-        }
-        
-        // Update timer in immersive mode
-        updateImmersiveTimer();
-        
-        // Show a brief message
-        const message = document.createElement('div');
-        message.className = 'speech-bubble fade-in';
-        message.style.position = 'absolute';
-        message.style.top = '50%';
-        message.style.left = '50%';
-        message.style.transform = 'translate(-50%, -50%)';
-        message.style.zIndex = '1003';
-        message.innerHTML = '<p>Immersive Mode Activated!</p>';
-        
-        immersiveView.appendChild(message);
-        
-        setTimeout(() => {
-            message.classList.add('fade-out');
-            setTimeout(() => message.remove(), 500);
-        }, 1500);
-        
-        // Initialize mini-map
-        try {
-            const miniMapElement = document.getElementById('mini-map');
-            if (miniMapElement) {
-                window.miniMap = new google.maps.Map(miniMapElement, {
-                    center: window.panorama.getPosition(),
-                    zoom: 15,
-                    mapTypeId: google.maps.MapTypeId.ROADMAP,
-                    disableDefaultUI: true
-                });
-                
-                // Add marker for current position
-                new google.maps.Marker({
-                    position: window.panorama.getPosition(),
-                    map: window.miniMap,
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        scale: 7,
-                        fillColor: '#FF9AC1',
-                        fillOpacity: 1,
-                        strokeColor: '#FFFFFF',
-                        strokeWeight: 2
-                    }
-                });
-            }
-        } catch (error) {
-            console.error("Error in immersive mode map setup:", error);
-        }
-    } else {
-        // Show game container with animation
-        gameContainer.style.display = 'block';
-        gameContainer.classList.add('fade-in');
-        immersiveView.classList.add('fade-out');
-        
-        setTimeout(() => {
-            immersiveView.style.display = 'none';
-            immersiveView.classList.remove('fade-out');
-        }, 500);
-    }
+    console.log("Immersive mode is now the default interface");
+    // No-op as immersive mode is now the default
 }
 
 /**
@@ -426,11 +460,16 @@ function updateImmersiveTimer() {
  * Enable the submit guess button
  */
 function enableSubmitButton() {
+    // Enable both the traditional and immersive guess buttons
     const submitButton = document.getElementById('submit-guess');
     if (submitButton) {
         submitButton.disabled = false;
-    } else {
-        console.error("Submit button not found");
+    }
+    
+    const immersiveGuessButton = document.getElementById('immersive-guess-btn');
+    if (immersiveGuessButton) {
+        immersiveGuessButton.disabled = false;
+        immersiveGuessButton.classList.add('active');
     }
 }
 
@@ -438,11 +477,16 @@ function enableSubmitButton() {
  * Disable the submit guess button
  */
 function disableSubmitButton() {
+    // Disable both the traditional and immersive guess buttons
     const submitButton = document.getElementById('submit-guess');
     if (submitButton) {
         submitButton.disabled = true;
-    } else {
-        console.error("Submit button not found");
+    }
+    
+    const immersiveGuessButton = document.getElementById('immersive-guess-btn');
+    if (immersiveGuessButton) {
+        immersiveGuessButton.disabled = true;
+        immersiveGuessButton.classList.remove('active');
     }
 }
 
@@ -450,20 +494,21 @@ function disableSubmitButton() {
  * Check if all required UI elements exist
  */
 function checkElements() {
-    const elements = ['result', 'score', 'round', 'submit-guess'];
-    let allFound = true;
+    // Check for immersive interface elements
+    const immersiveElements = ['immersive-view', 'panorama-fullscreen', 'minimap', 'immersive-round', 'immersive-score', 'immersive-timer', 'immersive-guess-btn'];
+    let allImmersiveFound = true;
     
-    elements.forEach(id => {
+    immersiveElements.forEach(id => {
         const element = document.getElementById(id);
         if (!element) {
-            console.error(`Element with id "${id}" not found`);
-            allFound = false;
+            console.error(`Immersive element with id "${id}" not found`);
+            allImmersiveFound = false;
         } else {
-            console.log(`Element with id "${id}" found`);
+            console.log(`Immersive element with id "${id}" found`);
         }
     });
     
-    return allFound;
+    return allImmersiveFound;
 }
 
 /**
@@ -474,14 +519,8 @@ function showLoadingIndicator() {
     console.log("Showing Japan Journey loading animation");
     
     // Check if we're between rounds (not the first round)
-    const currentRound = document.getElementById("round")?.textContent;
-    const isFirstRound = !currentRound || currentRound.includes("1 /");
-    
-    // Show location info if available
-    if (window.currentLocationData) {
-        // Create a simplified version of location info without accuracy rating
-        showLoadingLocationInfo(window.currentLocationData);
-    }
+    const currentRound = document.getElementById("immersive-round")?.textContent;
+    const isFirstRound = !currentRound || currentRound.includes("1/");
     
     // Use the journey animation for transitions between rounds
     if (!isFirstRound && window.journeyAnimation) {
@@ -515,7 +554,7 @@ function showLoadingIndicator() {
             `;
             
             // Add to panorama container
-            const panoramaElement = document.getElementById('panorama');
+            const panoramaElement = document.getElementById('panorama-fullscreen');
             if (panoramaElement) {
                 panoramaElement.style.position = 'relative';
                 panoramaElement.appendChild(loadingIndicator);
@@ -526,46 +565,6 @@ function showLoadingIndicator() {
             loadingIndicator.style.display = 'block';
         }
     }
-}
-
-/**
- * Show location information during loading
- * @param {Object} locationData - Data about the current location
- */
-function showLoadingLocationInfo(locationData) {
-    // Create or get location info element
-    let locationInfo = document.getElementById('location-info');
-    
-    if (!locationInfo) {
-        locationInfo = document.createElement('div');
-        locationInfo.id = 'location-info';
-        locationInfo.className = 'location-info';
-        
-        // Add to right column
-        const rightColumn = document.querySelector('.game-column-right');
-        if (rightColumn) {
-            // Insert at the beginning of the right column
-            rightColumn.insertBefore(locationInfo, rightColumn.firstChild);
-        }
-    }
-    
-    // Format location information without accuracy rating
-    locationInfo.innerHTML = `
-        <div class="card-header">
-            <h3>Location Info</h3>
-        </div>
-        <div class="card-body">
-            <p><strong>Name:</strong> ${locationData.name || 'Unknown location'}</p>
-            <p><strong>Region:</strong> <span class="badge badge-secondary">${locationData.region || 'Unknown region'}</span></p>
-            ${locationData.facts ? `<p><strong>Fun Fact:</strong> ${locationData.facts}</p>` : ''}
-        </div>
-    `;
-    
-    locationInfo.style.display = 'block';
-    
-    // Add pop animation
-    locationInfo.classList.add('pop');
-    setTimeout(() => locationInfo.classList.remove('pop'), 1500);
 }
 
 /**
@@ -584,9 +583,6 @@ function hideLoadingIndicator() {
     if (loadingIndicator) {
         loadingIndicator.style.display = 'none';
     }
-    
-    // Note: We intentionally don't hide the location info here
-    // as it should remain visible after loading is complete
 }
 
 /**
@@ -595,7 +591,12 @@ function hideLoadingIndicator() {
  * @param {number} distance - Distance in kilometers from the guess
  */
 function showLocationInfo(locationData, distance) {
-    // Create or get location info element
+    // In immersive mode, location info is shown in the results panel
+    if (window.isImmersiveMode) {
+        return;
+    }
+    
+    // Legacy location info display for non-immersive mode
     let locationInfo = document.getElementById('location-info');
     
     if (!locationInfo) {
@@ -739,43 +740,23 @@ function initResponsiveHelpers() {
     
     // Add listener for changes
     mediaQuery.addEventListener('change', handleScreenChange);
-    
-    // Initialize map toggle
-    initMapToggle();
-    
-    // Layout toggle functionality has been removed
-    // initLayoutPreference();
-}
-
-/**
- * Initialize map functionality (no toggle needed as map is always visible)
- */
-function initMapToggle() {
-    // Map is now always visible, so no toggle functionality needed
-    console.log("Map is always visible - no toggle needed");
-}
-
-/**
- * Initialize layout preference toggle - DISABLED
- */
-function initLayoutPreference() {
-    // Function disabled - toggle layout functionality removed
-    console.log("Layout toggle functionality has been disabled");
-    
-    // Apply default layout
-    document.body.classList.remove('vertical-layout');
-    localStorage.removeItem('japan-tsu-vertical-layout');
 }
 
 // Initialize responsive helpers when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initResponsiveHelpers();
+    
+    // Set up navigation controls for immersive mode
+    if (typeof setupNavigationControls === 'function') {
+        setupNavigationControls();
+    }
 });
 
 // Make functions globally available
 window.updateScore = updateScore;
 window.updateRound = updateRound;
 window.showResult = showResult;
+window.showImmersiveResult = showImmersiveResult;
 window.endGame = endGame;
 window.toggleImmersiveMode = toggleImmersiveMode;
 window.updateImmersiveTimer = updateImmersiveTimer;
@@ -788,5 +769,3 @@ window.showLocationInfo = showLocationInfo;
 window.updateTimerProgress = updateTimerProgress;
 window.showConfetti = showConfetti;
 window.initResponsiveHelpers = initResponsiveHelpers;
-window.initMapToggle = initMapToggle;
-window.initLayoutPreference = initLayoutPreference;

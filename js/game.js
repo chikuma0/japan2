@@ -63,13 +63,17 @@ function setupNewRound() {
     try {
         console.log(`Setting up round ${currentRound} of ${maxRounds}`);
         
+        // Reset maps for both interfaces
         resetMap();
+        resetMinimap();
+        
         showLoadingIndicator();
         
         // Ensure panorama is initialized
         if (!window.panorama) {
             console.log("Panorama not initialized, initializing now");
-            window.panorama = initializePanorama();
+            window.panorama = initializeImmersivePanorama();
+            window.minimap = initializeMinimap();
             continueSetupRound();
         } else {
             continueSetupRound();
@@ -269,11 +273,22 @@ function handleStreetViewError() {
         hideLoadingIndicator();
         console.log("Having trouble finding Street View data. Moving to a new location.");
         
-        // Instead of an alert which blocks the UI, show a message in the panorama
-        const panoramaElement = document.getElementById("panorama");
+        // Show error message in the panorama
+        const panoramaElement = document.getElementById("panorama-fullscreen");
         if (panoramaElement) {
             const errorMessage = document.createElement('div');
             errorMessage.className = 'error-message';
+            errorMessage.style.position = 'absolute';
+            errorMessage.style.top = '50%';
+            errorMessage.style.left = '50%';
+            errorMessage.style.transform = 'translate(-50%, -50%)';
+            errorMessage.style.zIndex = '2000';
+            errorMessage.style.background = 'rgba(255, 255, 255, 0.9)';
+            errorMessage.style.padding = '20px';
+            errorMessage.style.borderRadius = '10px';
+            errorMessage.style.boxShadow = '0 0 20px rgba(0, 0, 0, 0.5)';
+            errorMessage.style.textAlign = 'center';
+            
             errorMessage.innerHTML = `
                 <div class="card card-accent">
                     <div class="card-body">
@@ -370,17 +385,22 @@ function startTimer() {
 function handleTimeUp() {
     console.log("Time's up! Moving to the next round.");
     
-    // Check if we're in immersive mode and exit if necessary
-    if (window.isImmersiveMode) {
-        console.log("Exiting immersive mode before proceeding to next round");
-        toggleImmersiveMode();
-    }
-    
-    // Show a non-blocking message instead of an alert
-    const panoramaElement = document.getElementById("panorama");
+    // Show a non-blocking message
+    const panoramaElement = document.getElementById("panorama-fullscreen");
     if (panoramaElement) {
         const timeUpMessage = document.createElement('div');
         timeUpMessage.className = 'time-up-message';
+        timeUpMessage.style.position = 'absolute';
+        timeUpMessage.style.top = '50%';
+        timeUpMessage.style.left = '50%';
+        timeUpMessage.style.transform = 'translate(-50%, -50%)';
+        timeUpMessage.style.zIndex = '2000';
+        timeUpMessage.style.background = 'rgba(255, 255, 255, 0.9)';
+        timeUpMessage.style.padding = '20px';
+        timeUpMessage.style.borderRadius = '10px';
+        timeUpMessage.style.boxShadow = '0 0 20px rgba(0, 0, 0, 0.5)';
+        timeUpMessage.style.textAlign = 'center';
+        
         timeUpMessage.innerHTML = `
             <div class="card card-primary">
                 <div class="card-body">
@@ -481,17 +501,18 @@ function submitGuess() {
         totalScore += score;
         console.log("Total score:", totalScore);
         
-        // Show the actual location on the map
-        showActualLocation(actualLocation);
+        // Show the actual location on both maps
+        if (window.map) {
+            showActualLocation(actualLocation);
+        }
+        
+        if (window.minimap) {
+            showActualLocationOnMinimap(actualLocation);
+        }
         
         // Update UI with results
         showResult(distance, score);
         updateScore(totalScore);
-        
-        // Show information about the location if available
-        if (currentLocationData) {
-            showLocationInfo(currentLocationData, distance);
-        }
         
         // Check if this was the last round (round 5)
         if (currentRound === maxRounds) {
@@ -517,183 +538,42 @@ function submitGuess() {
                 isSubmitting = false;
             }, 1000);
             
-            // Phase 1: Show round result for a few seconds (already visible at this point)
-            // Add a "preparing journey" indicator after 1 second
-            setTimeout(() => {
-                const resultElement = document.getElementById('result');
-                if (resultElement) {
-                    const journeyIndicator = document.createElement('div');
-                    journeyIndicator.className = 'journey-indicator';
-                    journeyIndicator.style.marginTop = '15px';
-                    journeyIndicator.style.padding = '8px';
-                    journeyIndicator.style.backgroundColor = 'rgba(255, 117, 171, 0.1)';
-                    journeyIndicator.style.borderRadius = '5px';
-                    journeyIndicator.style.textAlign = 'center';
-                    journeyIndicator.style.animation = 'pulse 1.5s infinite';
-                    journeyIndicator.innerHTML = `
-                        <div style="font-weight: bold; margin-bottom: 5px;">Preparing for journey...</div>
-                        <div style="font-size: 14px;">Next location loading</div>
-                    `;
-                    resultElement.appendChild(journeyIndicator);
-                    
-                    // Add pulse animation
-                    const pulseStyle = document.createElement('style');
-                    pulseStyle.textContent = `
-                        @keyframes pulse {
-                            0% { opacity: 0.6; }
-                            50% { opacity: 1; }
-                            100% { opacity: 0.6; }
-                        }
-                    `;
-                    document.head.appendChild(pulseStyle);
-                }
-                
-                // Phase 2: Start journey animation while keeping result visible
-                setTimeout(() => {
-                    // Slide result to top in compact mode
-                    const resultElement = document.getElementById('result');
-                    if (resultElement) {
-                        // Add transition styles
-                        resultElement.style.transition = 'all 0.25s ease';
-                        
-                        // Move to top of screen
-                        resultElement.style.position = 'fixed';
-                        resultElement.style.top = '10px';
-                        resultElement.style.left = '50%';
-                        resultElement.style.transform = 'translateX(-50%)';
-                        resultElement.style.zIndex = '10000';
-                        resultElement.style.maxWidth = '300px';
-                        resultElement.style.padding = '5px 10px';
-                        resultElement.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                        resultElement.style.borderRadius = '10px';
-                        resultElement.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
-                        
-                        // Make card body more compact
-                        const cardBody = resultElement.querySelector('.card-body');
-                        if (cardBody) {
-                            cardBody.style.display = 'flex';
-                            cardBody.style.justifyContent = 'space-between';
-                            cardBody.style.padding = '5px';
-                        }
-                    }
-                    
-                    // Create journey animation overlay that covers the entire screen
-                    const journeyOverlay = document.createElement('div');
-                    journeyOverlay.className = 'journey-overlay';
-                    journeyOverlay.style.position = 'fixed';
-                    journeyOverlay.style.top = '0';
-                    journeyOverlay.style.left = '0';
-                    journeyOverlay.style.width = '100%';
-                    journeyOverlay.style.height = '100%';
-                    journeyOverlay.style.backgroundColor = 'rgba(255, 240, 245, 0.9)';
-                    journeyOverlay.style.zIndex = '9999';
-                    journeyOverlay.style.display = 'flex';
-                    journeyOverlay.style.flexDirection = 'column';
-                    journeyOverlay.style.justifyContent = 'center';
-                    journeyOverlay.style.alignItems = 'center';
-                    journeyOverlay.style.fontFamily = 'Varela Round, sans-serif';
-                    journeyOverlay.style.color = '#FF75AB';
-                    journeyOverlay.style.fontSize = '24px';
-                    journeyOverlay.style.textAlign = 'center';
-                    journeyOverlay.style.padding = '20px';
-                    
-                    // Add content to the overlay
-                    journeyOverlay.innerHTML = `
-                        <div class="mascot" style="width: 100px; height: 100px; margin-bottom: 20px; animation: bounce 0.5s infinite alternate;">
-                            <div style="width: 100%; height: 100%; background-color: #FF75AB; border-radius: 50%; position: relative; overflow: hidden;">
-                                <div style="position: absolute; top: 30%; left: 50%; transform: translateX(-50%); width: 60%; height: 40%; display: flex; justify-content: space-between;">
-                                    <div style="width: 15px; height: 15px; background-color: #333; border-radius: 50%;"></div>
-                                    <div style="width: 15px; height: 15px; background-color: #333; border-radius: 50%;"></div>
-                                </div>
-                                <div style="position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); width: 30%; height: 10%; border-bottom: 3px solid #333; border-radius: 50%;"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="message" style="font-size: 28px; font-weight: bold; margin: 20px 0;">Traveling to next location...</div>
-                        
-                        <div class="landmarks" style="display: flex; gap: 20px; margin: 20px 0; justify-content: center;">
-                            <div style="font-size: 40px; animation: pop 0.25s forwards;">🗼</div>
-                            <div style="font-size: 40px; animation: pop 0.25s forwards; animation-delay: 0.15s;">🗻</div>
-                            <div style="font-size: 40px; animation: pop 0.25s forwards; animation-delay: 0.3s;">🏯</div>
-                            <div style="font-size: 40px; animation: pop 0.25s forwards; animation-delay: 0.45s;">🚅</div>
-                        </div>
-                        
-                        <div class="progress-container" style="width: 80%; max-width: 400px; height: 20px; background-color: #FFF; border-radius: 10px; overflow: hidden; margin: 20px auto; border: 2px solid #FF75AB;">
-                            <div class="progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #FF75AB, #FFB6C1); transition: width 2.5s ease;"></div>
-                        </div>
-                    `;
-                    
-                    // Add animation styles
-                    const style = document.createElement('style');
-                    style.textContent = `
-                        @keyframes bounce {
-                            0% { transform: translateY(0); }
-                            100% { transform: translateY(-20px); }
-                        }
-                        
-                        @keyframes pop {
-                            0% { transform: scale(0); }
-                            70% { transform: scale(1.2); }
-                            100% { transform: scale(1); }
-                        }
-                    `;
-                    journeyOverlay.appendChild(style);
-                    
-                    // Add to document
-                    document.body.appendChild(journeyOverlay);
-                    
-                    // Animate progress bar
-                    setTimeout(() => {
-                        const progressBar = journeyOverlay.querySelector('.progress-bar');
-                        if (progressBar) {
-                            progressBar.style.width = '100%';
-                        }
-                    }, 50);
-                    
-                    // Remove overlay and restore result after animation completes
-                    setTimeout(() => {
-                        // Remove journey overlay
-                        if (journeyOverlay.parentNode) {
-                            journeyOverlay.parentNode.removeChild(journeyOverlay);
-                        }
-                        
-                        // Reset result element to original state
-                        if (resultElement) {
-                            resultElement.style.position = '';
-                            resultElement.style.top = '';
-                            resultElement.style.left = '';
-                            resultElement.style.transform = '';
-                            resultElement.style.zIndex = '';
-                            resultElement.style.maxWidth = '';
-                            resultElement.style.padding = '';
-                            resultElement.style.backgroundColor = '';
-                            resultElement.style.borderRadius = '';
-                            resultElement.style.boxShadow = '';
-                            
-                            // Reset card body
-                            const cardBody = resultElement.querySelector('.card-body');
-                            if (cardBody) {
-                                cardBody.style.display = '';
-                                cardBody.style.justifyContent = '';
-                                cardBody.style.padding = '';
-                            }
-                            
-                            // Remove journey indicator
-                            const journeyIndicator = resultElement.querySelector('.journey-indicator');
-                            if (journeyIndicator && journeyIndicator.parentNode) {
-                                journeyIndicator.parentNode.removeChild(journeyIndicator);
-                            }
-                        }
-                        
-                        // Start next round
-                        setupNewRound();
-                    }, 3000);
-                }, 2000); // Start phase 2 after 2 seconds
-            }, 500); // Start phase 1 after 0.5 seconds
+            // Add event listener to next round button in the results panel
+            const nextRoundButton = document.getElementById("next-round-btn");
+            if (nextRoundButton) {
+                nextRoundButton.addEventListener("click", startJourneyAnimation);
+            }
         }
     } catch (error) {
         console.error("Error in submitGuess function:", error);
         isSubmitting = false;
+    }
+}
+
+/**
+ * Start the journey animation between rounds
+ */
+function startJourneyAnimation() {
+    // Hide the results panel
+    const resultsPanel = document.getElementById("immersive-results");
+    if (resultsPanel) {
+        resultsPanel.style.display = "none";
+    }
+    
+    // Start the journey animation
+    if (window.journeyAnimation) {
+        window.journeyAnimation.start();
+        
+        // After the animation completes, start the next round
+        setTimeout(() => {
+            if (window.journeyAnimation) {
+                window.journeyAnimation.stop();
+            }
+            setupNewRound();
+        }, 7000); // Animation takes about 7 seconds
+    } else {
+        // Fallback if journey animation is not available
+        setupNewRound();
     }
 }
 
@@ -763,106 +643,42 @@ function resetGame(settings = {}) {
     totalScore = 0;
     currentRound = 1;
     resetMap();
+    resetMinimap();
     usedLocations = [];
     currentLocationData = null;
     retryCount = 0;
     
-    // Reset the game container to its initial state
-    const gameContainer = document.getElementById("game-container");
-    if (gameContainer) {
-        gameContainer.innerHTML = `
-            <!-- Game Header -->
-            <div class="game-header">
-                <div class="game-logo">
-                    <h1>Japan-tsū</h1>
-                    <div class="mascot mascot-sm">
-                        <div class="japan-mascot">
-                            <div class="mascot-face">
-                                <div class="mascot-eyes">
-                                    <div class="mascot-eye"></div>
-                                    <div class="mascot-eye"></div>
-                                </div>
-                                <div class="mascot-blush"></div>
-                                <div class="mascot-mouth"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- New Three-Column Layout -->
-            <div class="game-layout">
-                <!-- Left Column -->
-                <div class="game-column game-column-left">
-                    <!-- Game Info -->
-                    <div class="game-info">
-                        <div class="score-display" id="score">Total Score: 0</div>
-                        <div class="round-display" id="round">Round: 1 / 5</div>
-                        <div class="progress" id="timer-progress">
-                            <div class="progress-bar" style="width: 100%;"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Result Display -->
-                    <div id="result" style="display: none;"></div>
-                    
-                    <!-- Left Ad Space -->
-                    <div class="ad-container ad-container-left">
-                        <!-- Ad content will go here -->
-                    </div>
-                </div>
-        
-                <!-- Center Column -->
-                <div class="game-column game-column-center">
-                    <!-- Timer Display - Moved above panorama -->
-                    <div class="timer-display" id="timer">2:00</div>
-                    
-                    <!-- Panorama Viewer -->
-                    <div class="panorama-container" id="panorama"></div>
-                    
-                    <!-- Game Controls -->
-                    <div class="game-controls">
-                        <button class="btn btn-primary" id="submit-guess">Submit Guess</button>
-                        <button class="btn btn-secondary" id="toggle-immersive-btn">Immersive Mode</button>
-                    </div>
-                    
-                    <!-- Map Container -->
-                    <div class="map-container" id="map"></div>
-                </div>
-        
-                <!-- Right Column -->
-                <div class="game-column game-column-right">
-                    <!-- Location Info -->
-                    <div class="location-info" id="location-info" style="display: none;"></div>
-        
-                    <!-- Right Ad Space -->
-                    <div class="ad-container ad-container-right">
-                        <!-- Ad content will go here -->
-                    </div>
-                </div>
-            </div>
-        
-            <!-- Bottom Ad Space -->
-            <div class="ad-container">
-                <!-- Ad content will go here -->
-            </div>
-        `;
+    // Remove any end game overlay
+    const immersiveView = document.getElementById('immersive-view');
+    if (immersiveView) {
+        const endGameOverlay = immersiveView.querySelector('.end-game-overlay');
+        if (endGameOverlay) {
+            endGameOverlay.remove();
+        }
+    }
+    
+    // Reset the immersive results panel
+    const resultsPanel = document.getElementById('immersive-results');
+    if (resultsPanel) {
+        resultsPanel.style.display = 'none';
     }
     
     console.log("Game reset. Starting new game with round =", currentRound);
     
-    // Layout toggle functionality has been removed
-    document.body.classList.remove('vertical-layout');
-    
-    // We need to reinitialize the map and panorama before starting a new game
+    // We need to reinitialize the panorama and minimap before starting a new game
     // This is done asynchronously to ensure the DOM elements are ready
     setTimeout(() => {
         try {
-            console.log("Reinitializing map and panorama");
+            console.log("Reinitializing panorama and minimap");
             
-            // Initialize map and panorama
-            window.map = initializeMap();
-            window.panorama = initializePanorama();
+            // Initialize panorama and minimap
+            window.panorama = initializeImmersivePanorama();
+            window.minimap = initializeMinimap();
+            
+            // Set up navigation controls
+            if (typeof setupNavigationControls === 'function') {
+                setupNavigationControls();
+            }
             
             // Initialize the game again with settings
             initGame(settings);
@@ -938,6 +754,7 @@ window.setGameDifficulty = setGameDifficulty;
 window.setGameRegion = setGameRegion;
 window.setGameCategory = setGameCategory;
 window.resetGameSettings = resetGameSettings;
+window.startJourneyAnimation = startJourneyAnimation;
 
 // Expose currentLocationData to the window object for use in ui.js
 Object.defineProperty(window, 'currentLocationData', {

@@ -4,9 +4,13 @@
 
 // Map variables
 let map;
+let minimap;
 let guessMarker;
 let actualMarker;
 let animationPath;
+let minimapGuessMarker;
+let minimapActualMarker;
+let minimapAnimationPath;
 
 // Japan bounds for random coordinates
 const JAPAN_BOUNDS = {
@@ -55,6 +59,52 @@ function initializeMap(mapOptions = {}) {
 }
 
 /**
+ * Initialize the minimap for the immersive interface
+ * @param {Object} mapOptions - Options for minimap initialization
+ * @returns {google.maps.Map} The initialized minimap instance
+ */
+function initializeMinimap(mapOptions = {}) {
+    try {
+        const defaultOptions = {
+            center: { lat: 37.5, lng: 137 },
+            zoom: 5,
+            gestureHandling: 'greedy',
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            disableDefaultUI: true,
+            zoomControl: true,
+            zoomControlOptions: {
+                position: google.maps.ControlPosition.RIGHT_BOTTOM
+            }
+        };
+        
+        const options = { ...defaultOptions, ...mapOptions };
+        
+        const minimapElement = document.getElementById("minimap");
+        if (!minimapElement) {
+            console.error("Minimap element not found");
+            return null;
+        }
+        
+        const minimapInstance = new google.maps.Map(minimapElement, options);
+        
+        // Add click listener for placing guess marker
+        minimapInstance.addListener("click", (e) => {
+            console.log("Minimap clicked at:", e.latLng.lat(), e.latLng.lng());
+            placeGuessMarkerOnMinimap(e.latLng, minimapInstance);
+        });
+        
+        // Store minimap in module scope
+        minimap = minimapInstance;
+        window.minimap = minimapInstance;
+        
+        return minimapInstance;
+    } catch (error) {
+        console.error("Error initializing minimap:", error);
+        return null;
+    }
+}
+
+/**
  * Place a marker on the map at the specified location
  * @param {google.maps.LatLng} latLng - The location to place the marker
  * @param {google.maps.Map} targetMap - The map to place the marker on
@@ -86,6 +136,48 @@ function placeGuessMarker(latLng, targetMap = map) {
         return guessMarker;
     } catch (error) {
         console.error("Error placing guess marker:", error);
+        return null;
+    }
+}
+
+/**
+ * Place a marker on the minimap at the specified location
+ * @param {google.maps.LatLng} latLng - The location to place the marker
+ * @param {google.maps.Map} targetMap - The minimap to place the marker on
+ */
+function placeGuessMarkerOnMinimap(latLng, targetMap = minimap) {
+    try {
+        console.log("Placing guess marker on minimap at:", latLng.lat(), latLng.lng());
+        
+        if (minimapGuessMarker) {
+            minimapGuessMarker.setMap(null);
+        }
+        
+        minimapGuessMarker = new google.maps.Marker({
+            position: latLng,
+            map: targetMap,
+            icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
+        });
+        
+        console.log("Minimap guess marker placed at:", latLng.lat(), latLng.lng());
+        
+        // Also update the main guessMarker for consistency
+        guessMarker = minimapGuessMarker;
+        window.guessMarker = guessMarker;
+        
+        // Enable the guess button
+        const guessButton = document.getElementById("immersive-guess-btn");
+        if (guessButton) {
+            guessButton.disabled = false;
+            guessButton.classList.add("active");
+            console.log("Guess button enabled");
+        } else {
+            console.error("Guess button not found");
+        }
+        
+        return minimapGuessMarker;
+    } catch (error) {
+        console.error("Error placing guess marker on minimap:", error);
         return null;
     }
 }
@@ -137,6 +229,62 @@ function showActualLocation(actualLatLng) {
         return actualMarker;
     } catch (error) {
         console.error("Error showing actual location:", error);
+        return null;
+    }
+}
+
+/**
+ * Show the actual location on the minimap
+ * @param {google.maps.LatLng} actualLatLng - The actual location
+ */
+function showActualLocationOnMinimap(actualLatLng) {
+    try {
+        if (!minimap) {
+            console.error("Minimap not initialized");
+            return null;
+        }
+        
+        if (minimapActualMarker) minimapActualMarker.setMap(null);
+        
+        console.log('Placing actual location marker on minimap at:', actualLatLng.lat(), actualLatLng.lng());
+        
+        minimapActualMarker = new google.maps.Marker({
+            position: actualLatLng,
+            map: minimap,
+            icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
+        });
+        
+        // Draw line between guess and actual location if a guess was made
+        if (minimapGuessMarker) {
+            if (minimapAnimationPath) minimapAnimationPath.setMap(null);
+            
+            minimapAnimationPath = new google.maps.Polyline({
+                path: [minimapGuessMarker.getPosition(), actualLatLng],
+                geodesic: true,
+                strokeColor: '#FF0000',
+                strokeOpacity: 1.0,
+                strokeWeight: 2,
+                map: minimap
+            });
+            
+            // Fit bounds to show both markers
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(minimapGuessMarker.getPosition());
+            bounds.extend(actualLatLng);
+            minimap.fitBounds(bounds);
+        } else {
+            // If no guess was made, just center on the actual location
+            minimap.setCenter(actualLatLng);
+            minimap.setZoom(12);
+        }
+        
+        // Store in window for access from other modules
+        window.minimapActualMarker = minimapActualMarker;
+        window.minimapAnimationPath = minimapAnimationPath;
+        
+        return minimapActualMarker;
+    } catch (error) {
+        console.error("Error showing actual location on minimap:", error);
         return null;
     }
 }
@@ -224,8 +372,10 @@ function resetMap() {
         if (actualMarker) actualMarker.setMap(null);
         if (animationPath) animationPath.setMap(null);
         
-        map.setCenter({ lat: 37.5, lng: 137 });
-        map.setZoom(5);
+        if (map) {
+            map.setCenter({ lat: 37.5, lng: 137 });
+            map.setZoom(5);
+        }
         
         // Reset global variables
         guessMarker = null;
@@ -242,6 +392,41 @@ function resetMap() {
 }
 
 /**
+ * Reset the minimap to its initial state
+ */
+function resetMinimap() {
+    try {
+        if (minimapGuessMarker) minimapGuessMarker.setMap(null);
+        if (minimapActualMarker) minimapActualMarker.setMap(null);
+        if (minimapAnimationPath) minimapAnimationPath.setMap(null);
+        
+        if (minimap) {
+            minimap.setCenter({ lat: 37.5, lng: 137 });
+            minimap.setZoom(5);
+        }
+        
+        // Reset global variables
+        minimapGuessMarker = null;
+        minimapActualMarker = null;
+        minimapAnimationPath = null;
+        
+        // Reset window variables
+        window.minimapGuessMarker = null;
+        window.minimapActualMarker = null;
+        window.minimapAnimationPath = null;
+        
+        // Disable the guess button
+        const guessButton = document.getElementById("immersive-guess-btn");
+        if (guessButton) {
+            guessButton.disabled = true;
+            guessButton.classList.remove("active");
+        }
+    } catch (error) {
+        console.error("Error resetting minimap:", error);
+    }
+}
+
+/**
  * Get random coordinates within Japan bounds
  * @returns {Object} Random coordinates {lat, lng}
  */
@@ -253,12 +438,16 @@ function getRandomCoordinates() {
 
 // Make functions globally available
 window.initializeMap = initializeMap;
+window.initializeMinimap = initializeMinimap;
 window.placeGuessMarker = placeGuessMarker;
+window.placeGuessMarkerOnMinimap = placeGuessMarkerOnMinimap;
 window.showActualLocation = showActualLocation;
+window.showActualLocationOnMinimap = showActualLocationOnMinimap;
 window.createPixelIcon = createPixelIcon;
 window.createArrowSymbol = createArrowSymbol;
 window.animateArrowSlower = animateArrowSlower;
 window.resetMap = resetMap;
+window.resetMinimap = resetMinimap;
 window.getRandomCoordinates = getRandomCoordinates;
 
 // Log that the map.js module has loaded

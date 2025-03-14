@@ -48,7 +48,7 @@ function showTutorial() {
                 <div style="background: #FF75AB; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; justify-content: center; align-items: center; margin-right: 10px; flex-shrink: 0;">1</div>
                 <div>
                     <strong>Look around</strong>
-                    <p>You'll be placed somewhere in Japan. Use your mouse to look around in Street View.</p>
+                    <p>You'll be placed somewhere in Japan. Use your mouse to look around or use the navigation controls on the left.</p>
                 </div>
             </div>
             
@@ -56,7 +56,7 @@ function showTutorial() {
                 <div style="background: #FF75AB; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; justify-content: center; align-items: center; margin-right: 10px; flex-shrink: 0;">2</div>
                 <div>
                     <strong>Make your guess</strong>
-                    <p>Click on the map to place your guess for where you think you are.</p>
+                    <p>Click on the minimap in the bottom right corner to place your guess for where you think you are.</p>
                 </div>
             </div>
             
@@ -64,7 +64,7 @@ function showTutorial() {
                 <div style="background: #FF75AB; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; justify-content: center; align-items: center; margin-right: 10px; flex-shrink: 0;">3</div>
                 <div>
                     <strong>Submit and see results</strong>
-                    <p>Click "Submit Guess" to see how close you were and earn points.</p>
+                    <p>Click the "GUESS" button to see how close you were and earn points.</p>
                 </div>
             </div>
             
@@ -72,7 +72,7 @@ function showTutorial() {
                 <div style="background: #FF75AB; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; justify-content: center; align-items: center; margin-right: 10px; flex-shrink: 0;">4</div>
                 <div>
                     <strong>Play 5 rounds</strong>
-                    <p>Each game has 5 rounds. Try to get the highest total score!</p>
+                    <p>Each game has 5 rounds. The game will automatically advance to the next round after showing your results.</p>
                 </div>
             </div>
         </div>
@@ -130,14 +130,14 @@ function addFirstTimeHint() {
     
     // Wait for the panorama to load
     setTimeout(() => {
-        const panoramaContainer = document.querySelector('.panorama-container');
+        const panoramaContainer = document.getElementById('panorama-fullscreen');
         if (!panoramaContainer) return;
         
         // Create hint element
         const hintElement = document.createElement('div');
         hintElement.className = 'first-time-hint';
         hintElement.style.position = 'absolute';
-        hintElement.style.bottom = '20px';
+        hintElement.style.bottom = '100px';
         hintElement.style.left = '50%';
         hintElement.style.transform = 'translateX(-50%)';
         hintElement.style.backgroundColor = 'rgba(255, 117, 171, 0.9)';
@@ -145,7 +145,7 @@ function addFirstTimeHint() {
         hintElement.style.padding = '10px 15px';
         hintElement.style.borderRadius = '20px';
         hintElement.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
-        hintElement.style.zIndex = '100';
+        hintElement.style.zIndex = '2000';
         hintElement.style.pointerEvents = 'none';
         hintElement.style.animation = 'fadeInOut 5s forwards';
         
@@ -180,7 +180,64 @@ function addFirstTimeHint() {
     }, 2000);
 }
 
+/**
+ * Show welcome message for first-time visitors in immersive mode
+ */
+function showImmersiveWelcome() {
+    if (!isFirstVisit) return false;
+    
+    // Wait a moment for the interface to load
+    setTimeout(() => {
+        const immersiveView = document.getElementById('immersive-view');
+        if (!immersiveView) return;
+        
+        // Create welcome message
+        const welcomeMessage = document.createElement('div');
+        welcomeMessage.className = 'welcome-message';
+        welcomeMessage.style.position = 'absolute';
+        welcomeMessage.style.top = '50%';
+        welcomeMessage.style.left = '50%';
+        welcomeMessage.style.transform = 'translate(-50%, -50%)';
+        welcomeMessage.style.background = 'rgba(255, 255, 255, 0.9)';
+        welcomeMessage.style.padding = '30px';
+        welcomeMessage.style.borderRadius = '15px';
+        welcomeMessage.style.boxShadow = '0 0 20px rgba(0, 0, 0, 0.5)';
+        welcomeMessage.style.zIndex = '2000';
+        welcomeMessage.style.maxWidth = '500px';
+        welcomeMessage.style.textAlign = 'center';
+        
+        welcomeMessage.innerHTML = `
+            <h2 style="color: #FF75AB; margin-bottom: 10px;">Welcome to Japan-tsū!</h2>
+            <p style="margin-bottom: 20px;">Explore Japan through Street View and guess your location on the map.</p>
+            <div style="text-align: left; margin-bottom: 20px;">
+                <p>🔍 <strong>Navigation:</strong> Use the controls on the left to move around</p>
+                <p>🧭 <strong>Compass:</strong> Shows your current direction at the top</p>
+                <p>🗺️ <strong>Minimap:</strong> Click on it to place your guess</p>
+                <p>⏱️ <strong>Timer:</strong> You have 2 minutes per round</p>
+            </div>
+            <button id="start-exploring-btn" class="btn btn-primary" style="padding: 10px 20px; background-color: #FF75AB; color: white; border: none; border-radius: 20px; cursor: pointer;">Start Exploring</button>
+        `;
+        
+        immersiveView.appendChild(welcomeMessage);
+        
+        // Add event listener to start button
+        document.getElementById('start-exploring-btn').addEventListener('click', function() {
+            welcomeMessage.remove();
+            localStorage.setItem('japan-tsu-played', 'true');
+            
+            // Start the game
+            if (window.initGame) {
+                console.log("Starting game from welcome message");
+                window.initGame();
+            }
+        });
+    }, 1000);
+    
+    return true;
+}
+
 // Make functions globally available
 window.showTutorial = showTutorial;
 window.getBeginnerFriendlyLocation = getBeginnerFriendlyLocation;
 window.addFirstTimeHint = addFirstTimeHint;
+window.showImmersiveWelcome = showImmersiveWelcome;
