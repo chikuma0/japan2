@@ -9,6 +9,7 @@ let currentRound = 1; // Always start from round 1
 const maxRounds = 5;  // Always play 5 rounds
 let timerInterval;
 let usedLocations = [];
+let guessPositions = []; // Track player guesses for sharing
 let currentLocationData = null;
 let retryCount = 0;
 let gameSettings = {
@@ -16,6 +17,17 @@ let gameSettings = {
     region: null,     // null means all regions
     category: null    // null means all categories
 };
+
+// Make game state variables available globally for sharing
+window.guessPositions = guessPositions;
+window.usedLocations = usedLocations;
+
+// Expose totalScore to window for sharing
+Object.defineProperty(window, 'totalScore', {
+    get: function() {
+        return totalScore;
+    }
+});
 
 /**
  * Initialize the game
@@ -27,6 +39,7 @@ function initGame(settings = {}) {
     totalScore = 0;
     currentRound = 1;
     usedLocations = [];
+    guessPositions = []; // Reset guess positions
     retryCount = 0;
     
     // Apply any provided settings
@@ -50,13 +63,47 @@ function setupNewRound() {
     try {
         console.log(`Setting up round ${currentRound} of ${maxRounds}`);
         
+        // Reset main map completely
         resetMap();
-        showLoadingIndicator();
+        
+        // Reset minimap completely to clear previous guess trails
+        resetMinimap();
+        
+        // Don't show journey animation after the final round
+        if (currentRound === maxRounds) {
+            // Use a simple loading indicator instead of journey animation
+            let loadingIndicator = document.getElementById('loading-indicator');
+            if (!loadingIndicator) {
+                loadingIndicator = document.createElement('div');
+                loadingIndicator.id = 'loading-indicator';
+                loadingIndicator.className = 'loading-indicator';
+                
+                // Add simple loading message
+                loadingIndicator.innerHTML = `
+                    <div class="loading-spinner"></div>
+                    <p>Loading results...</p>
+                `;
+                
+                // Add to panorama container
+                const panoramaElement = document.getElementById('panorama-fullscreen');
+                if (panoramaElement) {
+                    panoramaElement.style.position = 'relative';
+                    panoramaElement.appendChild(loadingIndicator);
+                } else {
+                    document.body.appendChild(loadingIndicator);
+                }
+            } else {
+                loadingIndicator.style.display = 'block';
+            }
+        } else {
+            showLoadingIndicator();
+        }
         
         // Ensure panorama is initialized
         if (!window.panorama) {
             console.log("Panorama not initialized, initializing now");
-            window.panorama = initializePanorama();
+            window.panorama = initializeImmersivePanorama();
+            window.minimap = initializeMinimap();
             continueSetupRound();
         } else {
             continueSetupRound();
@@ -122,6 +169,14 @@ function continueSetupRound() {
             
             // Reset retry count for next round
             retryCount = 0;
+            
+            // If we're moving to the next round, update the round number now that the location is loaded
+            if (nextRoundPending) {
+                currentRound++;
+                console.log(`Now showing round ${currentRound} of ${maxRounds}`);
+                updateRound(currentRound, maxRounds);
+                nextRoundPending = false;
+            }
         });
     }).catch(error => {
         console.error('Error getting random location:', error);
@@ -172,6 +227,22 @@ async function getRandomLocationFromDB() {
  * @returns {Object} A location object from the database
  */
 function getRandomLocationFromDatabase() {
+    // For first-time players on first round, try to get a beginner-friendly location
+    if (currentRound === 1 && window.getBeginnerFriendlyLocation && !localStorage.getItem('japan-tsu-played')) {
+        const beginnerLocation = window.getBeginnerFriendlyLocation(LOCATIONS_DB);
+        if (beginnerLocation) {
+            console.log('Using beginner-friendly location for first-time player');
+            usedLocations.push(beginnerLocation);
+            
+            // Show first-time hint
+            if (window.addFirstTimeHint) {
+                setTimeout(window.addFirstTimeHint, 2000);
+            }
+            
+            return beginnerLocation;
+        }
+    }
+    
     // Filter out already used locations
     let availableLocations = LOCATIONS_DB.filter(loc =>
         !usedLocations.some(used =>
@@ -232,11 +303,22 @@ function handleStreetViewError() {
         hideLoadingIndicator();
         console.log("Having trouble finding Street View data. Moving to a new location.");
         
-        // Instead of an alert which blocks the UI, show a message in the panorama
-        const panoramaElement = document.getElementById("panorama");
+        // Show error message in the panorama
+        const panoramaElement = document.getElementById("panorama-fullscreen");
         if (panoramaElement) {
             const errorMessage = document.createElement('div');
             errorMessage.className = 'error-message';
+            errorMessage.style.position = 'absolute';
+            errorMessage.style.top = '50%';
+            errorMessage.style.left = '50%';
+            errorMessage.style.transform = 'translate(-50%, -50%)';
+            errorMessage.style.zIndex = '2000';
+            errorMessage.style.background = 'rgba(255, 255, 255, 0.9)';
+            errorMessage.style.padding = '20px';
+            errorMessage.style.borderRadius = '10px';
+            errorMessage.style.boxShadow = '0 0 20px rgba(0, 0, 0, 0.5)';
+            errorMessage.style.textAlign = 'center';
+            
             errorMessage.innerHTML = `
                 <div class="card card-accent">
                     <div class="card-body">
@@ -301,17 +383,17 @@ function startTimer() {
         // Add visual effects when time is running low
         if (timeLeft <= 10 && timeLeft > 0) {
             if (timerElement) {
-                timerElement.classList.add('pulse');
+                timerElement.classList.add('time-low');
             }
             if (immersiveTimerElement) {
-                immersiveTimerElement.classList.add('pulse');
+                immersiveTimerElement.classList.add('time-low');
             }
         } else {
             if (timerElement) {
-                timerElement.classList.remove('pulse');
+                timerElement.classList.remove('time-low');
             }
             if (immersiveTimerElement) {
-                immersiveTimerElement.classList.remove('pulse');
+                immersiveTimerElement.classList.remove('time-low');
             }
         }
         
@@ -333,17 +415,22 @@ function startTimer() {
 function handleTimeUp() {
     console.log("Time's up! Moving to the next round.");
     
-    // Check if we're in immersive mode and exit if necessary
-    if (window.isImmersiveMode) {
-        console.log("Exiting immersive mode before proceeding to next round");
-        toggleImmersiveMode();
-    }
-    
-    // Show a non-blocking message instead of an alert
-    const panoramaElement = document.getElementById("panorama");
+    // Show a non-blocking message
+    const panoramaElement = document.getElementById("panorama-fullscreen");
     if (panoramaElement) {
         const timeUpMessage = document.createElement('div');
         timeUpMessage.className = 'time-up-message';
+        timeUpMessage.style.position = 'absolute';
+        timeUpMessage.style.top = '50%';
+        timeUpMessage.style.left = '50%';
+        timeUpMessage.style.transform = 'translate(-50%, -50%)';
+        timeUpMessage.style.zIndex = '2000';
+        timeUpMessage.style.background = 'rgba(255, 255, 255, 0.9)';
+        timeUpMessage.style.padding = '20px';
+        timeUpMessage.style.borderRadius = '10px';
+        timeUpMessage.style.boxShadow = '0 0 20px rgba(0, 0, 0, 0.5)';
+        timeUpMessage.style.textAlign = 'center';
+        
         timeUpMessage.innerHTML = `
             <div class="card card-primary">
                 <div class="card-body">
@@ -371,6 +458,11 @@ let isSubmitting = false;
 /**
  * Submit the current guess and calculate score
  */
+// Variables to track round transitions
+let nextRoundPending = false;
+let nextRoundData = null; // Will store preloaded data for the next round
+let nextRoundPromise = null; // Promise for tracking next round loading
+
 function submitGuess() {
     try {
         // Prevent multiple submissions for the same round
@@ -413,6 +505,9 @@ function submitGuess() {
             guessLocation = null;
             distance = 2000; // Max distance
             score = 0;
+            
+            // Record null for this round's guess
+            guessPositions.push(null);
         } else {
             guessLocation = guessMarker.getPosition();
             
@@ -425,6 +520,9 @@ function submitGuess() {
             console.log("Actual location in submitGuess:", actualLocation.lat(), actualLocation.lng());
             console.log("Guess location:", guessLocation.lat(), guessLocation.lng());
             
+            // Record this round's guess position
+            guessPositions.push(guessLocation);
+            
             distance = google.maps.geometry.spherical.computeDistanceBetween(guessLocation, actualLocation) / 1000; // Convert to km
             score = calculateScore(distance);
         }
@@ -435,17 +533,18 @@ function submitGuess() {
         totalScore += score;
         console.log("Total score:", totalScore);
         
-        // Show the actual location on the map
-        showActualLocation(actualLocation);
+        // Show the actual location on both maps
+        if (window.map) {
+            showActualLocation(actualLocation);
+        }
+        
+        if (window.minimap) {
+            showActualLocationOnMinimap(actualLocation);
+        }
         
         // Update UI with results
         showResult(distance, score);
         updateScore(totalScore);
-        
-        // Show information about the location if available
-        if (currentLocationData) {
-            showLocationInfo(currentLocationData, distance);
-        }
         
         // Check if this was the last round (round 5)
         if (currentRound === maxRounds) {
@@ -458,25 +557,244 @@ function submitGuess() {
             
             // Delay ending the game to give the player time to see the final round result
             console.log("Delaying end game to show final round result");
+            
+            // Stop any running journey animation immediately
+            if (window.journeyAnimation) {
+                window.journeyAnimation.stop();
+            }
+            
+            // Hide any loading indicators
+            hideLoadingIndicator();
+            
+            // Don't preload next round after the final round
+            nextRoundPromise = null;
+            nextRoundData = null;
+            nextRoundPending = false;
+            
+            // IMPORTANT: Don't set up a new round after the final round
+            // This is the key change to prevent the journey animation from showing after the 5th round
+            
             setTimeout(() => {
+                // Go directly to end game without journey animation after 5th round
                 endGame(totalScore, maxRounds, usedLocations);
-            }, 7000); // Same delay as for showing location info
+                
+                // Return early to prevent any further processing
+                return;
+            }, 2000); // Show results for 2 seconds
         } else {
-            // Move to next round
-            currentRound++;
-            console.log(`Round completed. Moving to round ${currentRound} of ${maxRounds}`);
-            updateRound(currentRound, maxRounds);
+            // Mark that we're moving to the next round, but don't increment yet
+            nextRoundPending = true;
+            console.log(`Round ${currentRound} completed. Preparing for next round.`);
+            
+            // Start preloading the next round immediately, but only if we're not at the last round
+            if (currentRound < maxRounds - 1) {
+                nextRoundPromise = preloadNextRound();
+            } else {
+                // For the 4th round (leading to 5th), don't preload since we don't need a 6th round
+                nextRoundPromise = null;
+                nextRoundData = null;
+            }
             
             // Reset the submission flag after a delay
             setTimeout(() => {
                 isSubmitting = false;
             }, 1000);
             
-            setTimeout(setupNewRound, 7000); // Increased delay to give players time to read location info
+            // Set up automatic transition after showing results
+            setTimeout(() => {
+                // Start the journey animation (which will show the next round when ready)
+                startJourneyAnimation();
+            }, 3700); // Show results for 3.7 seconds
         }
     } catch (error) {
         console.error("Error in submitGuess function:", error);
         isSubmitting = false;
+    }
+}
+
+/**
+ * Preload the next round in the background
+ * @returns {Promise} A promise that resolves when the next round is ready
+ */
+function preloadNextRound() {
+    return new Promise((resolve) => {
+        console.log("Preloading next round in the background");
+        
+        // Get a random location from our database or generator using the existing logic
+        getRandomLocationFromDB().then(locationData => {
+            // Store the location data
+            const preloadedLocationData = locationData;
+            
+            // Convert the coordinates to a LatLng object
+            const coordinates = new google.maps.LatLng(
+                locationData.coordinates.lat,
+                locationData.coordinates.lng
+            );
+            
+            console.log(`Preloading location: ${locationData.name}`);
+            
+            // Find a Street View panorama for this location
+            findStreetViewLocation(coordinates, (location, error) => {
+                if (error) {
+                    console.error('Error finding Street View location for preload:', error);
+                    // Resolve with failure, will fall back to normal loading
+                    resolve(false);
+                    return;
+                }
+                
+                // Store both the location and the location data for the next round
+                nextRoundData = {
+                    location: location,
+                    locationData: preloadedLocationData
+                };
+                
+                console.log('Successfully preloaded next round');
+                // Resolve the promise with success
+                resolve(true);
+            });
+        }).catch(error => {
+            console.error('Error preloading next round:', error);
+            // Resolve with failure, will fall back to normal loading
+            resolve(false);
+        });
+    });
+}
+
+/**
+ * Start the journey animation between rounds
+ */
+function startJourneyAnimation() {
+    // IMPORTANT: Never show journey animation after the final round
+    // Also check if the next round would be the last round (currentRound + 1 === maxRounds)
+    if (currentRound === maxRounds || (nextRoundPending && currentRound + 1 === maxRounds)) {
+        console.log("Final round completed or transitioning to final round, skipping journey animation");
+        // Wait 3.7 seconds (same as result display time) then proceed
+        setTimeout(() => {
+            if (currentRound === maxRounds) {
+                // If we're already at the last round, end the game
+                endGame(totalScore, maxRounds, usedLocations);
+            } else {
+                // If we're transitioning to the last round, set up the final round
+                setupNewRound();
+            }
+        }, 3700);
+        return;
+    }
+    
+    // Hide the results panel
+    const resultsPanel = document.getElementById("immersive-results");
+    if (resultsPanel) {
+        resultsPanel.style.display = "none";
+    }
+    
+    // Start the journey animation
+    if (window.journeyAnimation) {
+        window.journeyAnimation.start();
+        
+        // Always wait exactly 5 seconds before showing the next round
+        // This ensures consistent timing regardless of preloading
+        const animationStartTime = Date.now();
+        
+        // If we have a next round promise, wait for it to complete
+        if (nextRoundPromise) {
+            nextRoundPromise.then(success => {
+                // Calculate how much time has passed since animation started
+                const elapsedTime = Date.now() - animationStartTime;
+                const remainingTime = Math.max(5000 - elapsedTime, 0);
+                
+                console.log(`Animation has been running for ${elapsedTime}ms, waiting ${remainingTime}ms more to ensure 5 seconds total`);
+                
+                // Wait for the remaining time to ensure 5 seconds total
+                setTimeout(() => {
+                    // Stop the animation after exactly 5 seconds
+                    if (window.journeyAnimation) {
+                        window.journeyAnimation.stop();
+                    }
+                    
+                    // Show the next round
+                    showNextRound();
+                }, remainingTime);
+            });
+        } else {
+            // Fallback to the original behavior if no promise exists
+            setTimeout(() => {
+                if (window.journeyAnimation) {
+                    window.journeyAnimation.stop();
+                }
+                
+                // Only set up a new round if we're not at the last round
+                if (currentRound < maxRounds) {
+                    setupNewRound();
+                } else {
+                    // For the 5th round, just end the game
+                    console.log("Final round completed, ending game");
+                    endGame(totalScore, maxRounds, usedLocations);
+                }
+            }, 5000);
+        }
+    } else {
+        // Fallback if journey animation is not available
+        if (nextRoundData) {
+            showNextRound();
+        } else {
+            setupNewRound();
+        }
+    }
+}
+
+/**
+ * Show the next round using preloaded data
+ */
+function showNextRound() {
+    // If we have preloaded data, use it
+    if (nextRoundData) {
+        console.log("Using preloaded data for next round");
+        
+        // Update the round number
+        currentRound++;
+        console.log(`Now showing round ${currentRound} of ${maxRounds}`);
+        updateRound(currentRound, maxRounds);
+        
+        // Set the actual location
+        actualLocation = nextRoundData.location;
+        currentLocationData = nextRoundData.locationData;
+        
+        console.log('Original coordinates:', currentLocationData.coordinates.lat, currentLocationData.coordinates.lng);
+        console.log('Panorama location:', actualLocation.lat(), actualLocation.lng());
+        console.log('Location data:', currentLocationData.name, currentLocationData.region);
+        
+        // Set the panorama to the new location with custom POV if available
+        if (currentLocationData.pov) {
+            setPanoramaLocation(actualLocation, currentLocationData.pov);
+        } else {
+            setPanoramaLocation(actualLocation);
+        }
+        
+        // Start the timer for this round
+        startTimer();
+        
+        // Enable the submit button
+        enableSubmitButton();
+        
+        // Reset retry count for next round
+        retryCount = 0;
+        
+        // Reset the next round data and promise
+        nextRoundData = null;
+        nextRoundPromise = null;
+        nextRoundPending = false;
+    } else {
+        // Fallback to the original setup if preloading failed
+        console.log("No preloaded data available, using standard setup");
+        
+        // Only set up a new round if we're not at the last round
+        if (currentRound < maxRounds) {
+            setupNewRound();
+        } else {
+            // For the 5th round, just end the game
+            console.log("Final round completed, ending game");
+            endGame(totalScore, maxRounds, usedLocations);
+        }
     }
 }
 
@@ -523,7 +841,7 @@ function calculateScore(distance) {
  */
 function getJapaneseLevel(percentage) {
     if (percentage >= 90) return "日本地理マスター (Nihon Chiri Master)";
-    if (percentage >= 70) return "本通 (Nihon-tsū)";
+    if (percentage >= 70) return "日本通 (Nihon-tsū)";
     if (percentage >= 50) return "地理オタク (Chiri Otaku)";
     if (percentage >= 30) return "旅行好き (Ryokō-zuki)";
     return "駅前迷子 (Ekimae Maigo)";
@@ -546,76 +864,42 @@ function resetGame(settings = {}) {
     totalScore = 0;
     currentRound = 1;
     resetMap();
+    resetMinimap(); // Use full reset for new game
     usedLocations = [];
     currentLocationData = null;
     retryCount = 0;
     
-    // Reset the game container to its initial state
-    const gameContainer = document.getElementById("game-container");
-    if (gameContainer) {
-        gameContainer.innerHTML = `
-            <div class="game-header">
-                <div class="game-logo">
-                    <h1>Japan-tsū</h1>
-                    <div class="mascot mascot-sm">
-                        <div class="japan-mascot">
-                            <div class="mascot-face">
-                                <div class="mascot-eyes">
-                                    <div class="mascot-eye"></div>
-                                    <div class="mascot-eye"></div>
-                                </div>
-                                <div class="mascot-blush"></div>
-                                <div class="mascot-mouth"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="game-settings">
-                    <button class="btn btn-sm btn-outline" id="settings-button">Settings</button>
-                </div>
-            </div>
-
-            <div class="timer-display" id="timer">2:00</div>
-
-            <div class="panorama-container" id="panorama"></div>
-
-            <div class="game-info-grid">
-                <div class="map-container" id="map"></div>
-
-                <div class="game-info">
-                    <div class="score-display" id="score">Total Score: 0</div>
-                    <div class="round-display" id="round">Round: 1 / 5</div>
-                    <div class="progress" id="timer-progress">
-                        <div class="progress-bar" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="game-controls">
-                <button class="btn btn-primary" id="submit-guess">Submit Guess</button>
-                <button class="btn btn-secondary" id="toggle-immersive-btn" onclick="toggleImmersiveMode()">Immersive Mode</button>
-            </div>
-
-            <div id="result" style="display: none;"></div>
-            <div id="location-info" style="display: none;"></div>
-            
-            <div class="ad-container">
-                <!-- Ad content will go here -->
-            </div>
-        `;
+    // Remove any end game overlay
+    const immersiveView = document.getElementById('immersive-view');
+    if (immersiveView) {
+        const endGameOverlay = immersiveView.querySelector('.end-game-overlay');
+        if (endGameOverlay) {
+            endGameOverlay.remove();
+        }
+    }
+    
+    // Reset the immersive results panel
+    const resultsPanel = document.getElementById('immersive-results');
+    if (resultsPanel) {
+        resultsPanel.style.display = 'none';
     }
     
     console.log("Game reset. Starting new game with round =", currentRound);
     
-    // We need to reinitialize the map and panorama before starting a new game
+    // We need to reinitialize the panorama and minimap before starting a new game
     // This is done asynchronously to ensure the DOM elements are ready
     setTimeout(() => {
         try {
-            console.log("Reinitializing map and panorama");
+            console.log("Reinitializing panorama and minimap");
             
-            // Initialize map and panorama
-            window.map = initializeMap();
-            window.panorama = initializePanorama();
+            // Initialize panorama and minimap
+            window.panorama = initializeImmersivePanorama();
+            window.minimap = initializeMinimap();
+            
+            // Set up navigation controls
+            if (typeof setupNavigationControls === 'function') {
+                setupNavigationControls();
+            }
             
             // Initialize the game again with settings
             initGame(settings);
@@ -685,8 +969,17 @@ window.submitGuess = submitGuess;
 window.calculateScore = calculateScore;
 window.getJapaneseLevel = getJapaneseLevel;
 window.resetGame = resetGame;
+window.resetGameGlobal = resetGame; // Add alias for resetGame to fix play again button
 window.handleTimeUp = handleTimeUp;
 window.setGameDifficulty = setGameDifficulty;
 window.setGameRegion = setGameRegion;
 window.setGameCategory = setGameCategory;
 window.resetGameSettings = resetGameSettings;
+window.startJourneyAnimation = startJourneyAnimation;
+
+// Expose currentLocationData to the window object for use in ui.js
+Object.defineProperty(window, 'currentLocationData', {
+    get: function() {
+        return currentLocationData;
+    }
+});
